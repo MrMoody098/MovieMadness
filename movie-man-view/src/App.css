@@ -1,0 +1,89 @@
+.App {
+    margin: 0;
+    padding: 0;
+    height: 100%; /* Ensure body and html elements take up the full height */
+}
+
+.App {
+    text-align: center;
+    background: linear-gradient(to bottom, rgb(100, 0, 128) 0.0001%, #000000 25%);
+    min-height: 100vh;
+}
+.navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    margin: 0 auto;
+    width: 80%;
+    background-color: #113;
+    color: white;
+    text-align: center;
+    padding: 15px 20px;
+    border-radius: 50px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.navbar.hidden {
+    transform: translateY(-100%);
+    opacity: 0;
+}
+
+.navbar.visible {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.navbar-content {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    font-size: 20px;
+    font-weight: bold;
+    color: white;
+}
+
+.nav-links a {
+    margin-left: 15px;
+    color: white;
+    text-decoration: none;
+    font-size: 16px;
+}
+
+.nav-links a:hover {
+    color: #ddd;
+}
+
+.search-bar {
+    width: 40%;
+    padding: 10px 15px;
+    border-radius: 30px;
+    border: 1px solid #555;
+    outline: none;
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+.search-bar::placeholder {
+    color: #aaa;
+}
+
+.search-bar:focus {
+    width: 50%;
+    border-color: #888;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+body, .main-content {
+    padding-top: 70px;
+    background: rgb(100, 0, 128);
+}
