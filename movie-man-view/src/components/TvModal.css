@@ -1,0 +1,21 @@
+/* src/TvModal.css */
+
+.episode-controls, .season-controls {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+}
+
+.episode-controls button, .season-controls button {
+    background-color: #171716;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.episode-controls button:hover, .season-controls button:hover {
+    background-color: #333;
+}

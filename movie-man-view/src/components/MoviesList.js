@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import '../MoviesList.css';
+import './MoviesList.css';
 import MovieDetails from './MovieDetails';
 import Modal from 'react-modal';
 import NavBar from './NavBar';
@@ -84,7 +84,6 @@ const MoviesList = () => {
               </div>
           ))}
 
-          {/* Modal to show movie details */}
           <Modal
               isOpen={isModalOpen}
               onRequestClose={closeModal}

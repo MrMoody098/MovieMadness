@@ -1,4 +1,6 @@
-import React, { useEffect, useState } from 'react';
+// src/components/NavBar.js
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import '../App.css';
 
 const NavBar = ({ onSearch, isModalOpen }) => {
@@ -34,8 +36,10 @@ const NavBar = ({ onSearch, isModalOpen }) => {
     };
   }, []);
 
+  const isNavbarVisible = show && !isModalOpen;
+
   return (
-      <div className={`navbar ${show && !isModalOpen ? 'visible' : 'hidden'}`}>
+      <div className={`navbar ${isNavbarVisible ? 'visible' : 'hidden'}`}>
         <div className="navbar-content">
           <div className="logo">MovieMan</div>
           <input
@@ -44,12 +48,17 @@ const NavBar = ({ onSearch, isModalOpen }) => {
               placeholder="Search..."
               value={query}
               onChange={handleChange}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handleSearch();
+                }
+              }}
           />
-          <button onClick={handleSearch}>Search</button>
           <div className="nav-links">
-            <a href="#home">Home</a>
-            <a href="#about">About</a>
-            <a href="#contact">Contact</a>
+            <Link to="/explore">Explore All</Link>
+            <Link to="/movies">Movies</Link>
+            <Link to="/tv-shows">TV Shows</Link>
+            <Link to="/filter">Filter</Link>
           </div>
         </div>
       </div>

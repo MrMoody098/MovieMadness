@@ -7,20 +7,23 @@
 }
 
 .movie-card {
-    background-color: #f0f0f0;
     border-radius: 15px;
     padding: 20px;
     width: 200px;
     text-align: center;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     transition: transform 0.2s;
 }
 
 .movie-card:hover {
     transform: scale(1.05);
+    background-color: #413f42;
+    opacity: 95%;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+
 }
 
 .movie-poster {
+    opacity: 100;
     background-color: #ddd;
     border-radius: 15px;
     height: 300px;
@@ -41,7 +44,7 @@
 
 .movie-details {
     margin: 5px 0;
-    color: #666;
+    color: #ffff;
 }
 
 /* Example styles for the overlay */

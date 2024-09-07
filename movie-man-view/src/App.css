@@ -27,16 +27,19 @@
     justify-content: space-between;
     align-items: center;
     transition: transform 0.3s ease, opacity 0.3s ease;
+
 }
 
 .navbar.hidden {
     transform: translateY(-100%);
     opacity: 0;
+    pointer-events: none; /* Prevent clicks when hidden */
 }
 
 .navbar.visible {
     transform: translateY(0);
     opacity: 1;
+    pointer-events: auto;
 }
 
 .navbar-content {

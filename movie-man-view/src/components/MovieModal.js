@@ -1,6 +1,6 @@
 // MovieModal.js
 import React from 'react';
-import '../MoviesList.css'
+import './MoviesList.css'
 const MovieModal = ({ movie, onClose }) => {
   return (
     <div className="movie-modal-overlay">
