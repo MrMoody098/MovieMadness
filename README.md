@@ -29,13 +29,13 @@ MovieMan is a React application that allows users to browse trending movies and 
 1. **Clone the repository:**
 
     ```bash
-    git clone https://github.com/your-username/movie-man.git
+    git clone https://github.com/MrMoody098/MovieMadness.git
     ```
 
 2. **Navigate to the project directory:**
 
     ```bash
-    cd movie-man
+    cd movie-man-view
     ```
 
 3. **Install dependencies:**
@@ -61,7 +61,7 @@ MovieMan is a React application that allows users to browse trending movies and 
 1. **Explore Trending Movies**: The app displays trending movies by default.
 2. **Search for Movies**: Use the search bar in the navigation bar to find specific movies by title.
 3. **View Movie Details**: Click on a movie card to view its details and an embedded trailer in a modal.
-
+4. **Search For TV Shows** browse the trending tv shows or search for them using the search bar
 ## API Key
 
 You need to replace the `TMDB_API_KEY` placeholder with your own API key from The Movie Database. You can obtain an API key by signing up on [TMDb's website](https://www.themoviedb.org/).

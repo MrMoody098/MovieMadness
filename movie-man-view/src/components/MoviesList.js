@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import './MoviesList.css';
 import MovieDetails from './MovieDetails';
@@ -12,41 +12,68 @@ const MoviesList = () => {
   const [selectedMovie, setSelectedMovie] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [page, setPage] = useState(1); // Track the current page
+  const [hasMore, setHasMore] = useState(true); // Track if there are more pages
+  const loaderRef = useRef(null); // Reference to the loader div at the bottom
 
-  const fetchMovies = async (query = '') => {
+  // Fetch movies
+  const fetchMovies = async (page, query = '') => {
     try {
       let url;
       if (query) {
-        url = `https://api.themoviedb.org/3/search/movie?api_key=${TMDB_API_KEY}&query=${query}&include_adult=false&language=en-US&page=1`;
+        url = `https://api.themoviedb.org/3/search/movie?api_key=${TMDB_API_KEY}&query=${query}&include_adult=false&language=en-US&page=${page}`;
       } else {
-        url = `https://api.themoviedb.org/3/trending/movie/day?api_key=${TMDB_API_KEY}`;
+        url = `https://api.themoviedb.org/3/trending/movie/day?api_key=${TMDB_API_KEY}&page=${page}`;
       }
 
       const { data } = await axios.get(url);
 
-      // Modify the movie data to include poster URL from TMDb
-      const modifiedMovies = data.results.map((movie) => ({
-        ...movie,
-        poster: movie.poster_path
-            ? `https://image.tmdb.org/t/p/w500/${movie.poster_path}`
-            : 'default-poster.jpg' // Placeholder for missing poster
-      }));
+      // Append the new movies to the current list
+      setMovies((prevMovies) => [...prevMovies, ...data.results]);
 
-      setMovies(modifiedMovies);
+      // Check if there are more movies to load
+      if (data.page >= data.total_pages) {
+        setHasMore(false); // No more pages to load
+      }
     } catch (error) {
       console.error('Error fetching movies:', error);
     }
   };
 
+  // Fetch initial movies on mount
   useEffect(() => {
-    fetchMovies(); // Fetch trending movies when the component mounts
-  }, []);
+    fetchMovies(page, searchQuery);
+  }, [page, searchQuery]);
 
+  // Fetch new movies when searchQuery changes
   useEffect(() => {
-    if (searchQuery) {
-      fetchMovies(searchQuery); // Fetch movies based on the search query
-    }
+    setMovies([]); // Clear the movie list on a new search
+    setPage(1); // Reset to page 1
+    setHasMore(true); // Reset hasMore flag
+    fetchMovies(1, searchQuery); // Fetch the first page of search results
   }, [searchQuery]);
+
+  // Intersection Observer to detect when the user reaches the bottom
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+        (entries) => {
+          if (entries[0].isIntersecting && hasMore) {
+            setPage((prevPage) => prevPage + 1); // Increment the page number
+          }
+        },
+        { threshold: 1 }
+    );
+
+    if (loaderRef.current) {
+      observer.observe(loaderRef.current);
+    }
+
+    return () => {
+      if (loaderRef.current) {
+        observer.unobserve(loaderRef.current);
+      }
+    };
+  }, [hasMore]);
 
   const handleMovieClick = (movie) => {
     setSelectedMovie(movie);
@@ -73,7 +100,12 @@ const MoviesList = () => {
               >
                 {/* Movie poster */}
                 <div className="movie-poster">
-                  <img src={movie.poster} alt={movie.title} />
+                  <img
+                      src={movie.poster_path
+                          ? `https://image.tmdb.org/t/p/w500/${movie.poster_path}`
+                          : 'default-poster.jpg'}
+                      alt={movie.title}
+                  />
                 </div>
 
                 {/* Movie details */}
@@ -84,6 +116,10 @@ const MoviesList = () => {
               </div>
           ))}
 
+          {/* Loader div for infinite scroll */}
+          {hasMore && <div ref={loaderRef} className="loader">Loading more movies...</div>}
+
+          {/* Modal for movie details */}
           <Modal
               isOpen={isModalOpen}
               onRequestClose={closeModal}
