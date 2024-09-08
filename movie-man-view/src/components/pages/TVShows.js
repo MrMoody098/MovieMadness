@@ -1,22 +1,29 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import NavBar from "../NavBar";
 import TvModal from "../TvModal";
-const TMDB_API_KEY = 'f58bf4f31de2a8346b5841b863457b1f'; // Your API key
+import "./TVShows.css"
 
+const TMDB_API_KEY = 'f58bf4f31de2a8346b5841b863457b1f'; // Your API key
 const TVShows = () => {
     const [tvShows, setTVShows] = useState([]);
     const [selectedTVShow, setSelectedTVShow] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
+    const [page, setPage] = useState(1);
+    const [hasMore, setHasMore] = useState(true); // Track if there are more TV shows to load
+    const [loading, setLoading] = useState(false);
 
-    const fetchTVShows = async (query = '') => {
+    const fetchTVShows = async (query = '', page = 1) => {
+        if (loading) return; // Prevent multiple fetches
+
+        setLoading(true);
         try {
             let url;
             if (query) {
-                url = `https://api.themoviedb.org/3/search/tv?api_key=${TMDB_API_KEY}&query=${query}&include_adult=false&language=en-US&page=1`;
+                url = `https://api.themoviedb.org/3/search/tv?api_key=${TMDB_API_KEY}&query=${query}&include_adult=false&language=en-US&page=${page}`;
             } else {
-                url = `https://api.themoviedb.org/3/trending/tv/day?api_key=${TMDB_API_KEY}`;
+                url = `https://api.themoviedb.org/3/trending/tv/day?api_key=${TMDB_API_KEY}&page=${page}`;
             }
 
             const { data } = await axios.get(url);
@@ -29,19 +36,26 @@ const TVShows = () => {
                     : 'default-poster.jpg', // Placeholder for missing poster
             }));
 
-            setTVShows(modifiedTVShows);
+            setTVShows((prevShows) => [...prevShows, ...modifiedTVShows]);
+
+            // Update hasMore based on response
+            setHasMore(data.results.length > 0);
         } catch (error) {
             console.error('Error fetching TV shows:', error);
+        } finally {
+            setLoading(false);
         }
     };
 
     useEffect(() => {
-        fetchTVShows(); // Fetch trending TV shows when the component mounts
-    }, []);
+        fetchTVShows('', page); // Fetch trending TV shows when the component mounts
+    }, [page]);
 
     useEffect(() => {
         if (searchQuery) {
-            fetchTVShows(searchQuery); // Fetch TV shows based on the search query
+            setTVShows([]);
+            setPage(1);
+            fetchTVShows(searchQuery, 1); // Fetch TV shows based on the search query
         }
     }, [searchQuery]);
 
@@ -58,9 +72,29 @@ const TVShows = () => {
         setSearchQuery(query);
     };
 
+    const handleScroll = useCallback(() => {
+        if (
+            window.innerHeight + document.documentElement.scrollTop + 50 >=
+            document.documentElement.offsetHeight
+        ) {
+            if (hasMore && !loading) {
+                setPage((prevPage) => prevPage + 1);
+            }
+        }
+    }, [hasMore, loading]);
+
+    useEffect(() => {
+        window.addEventListener('scroll', handleScroll);
+        return () => {
+            window.removeEventListener('scroll', handleScroll);
+        };
+    }, [handleScroll]);
+
     return (
         <div>
             <NavBar isModalOpen={isModalOpen} onSearch={handleSearch} />
+            <div className={"tv-title"}><h2>TV Shows</h2></div>
+
             <div className="movies-container">
                 {tvShows.map((tvShow) => (
                     <div
@@ -88,6 +122,8 @@ const TVShows = () => {
                     tvShow={selectedTVShow}
                 />
             </div>
+
+            {loading && <div>Loading...</div>}
         </div>
     );
 };

@@ -91,7 +91,7 @@ const MoviesList = () => {
   return (
       <div>
         <NavBar isModalOpen={isModalOpen} onSearch={handleSearch} />
-        <div className={"movie-title"}><h2 className={"movie-title"}>Movies</h2></div>
+        <div className={"movie-title"}><h2>Movies</h2></div>
         <div className="movies-container">
           {movies.map((movie) => (
               <div
