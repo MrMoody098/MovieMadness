@@ -30,7 +30,6 @@ function App() {
     return (
         <Router>
             <div className="App">
-                <NavBar />
                 <main>
                     <Routes>
                         <Route path="/" element={<MoviesList />} />

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import "../Filter.css";
+import NavBar from "../NavBar";
 const TMDB_API_KEY = 'f58bf4f31de2a8346b5841b863457b1f'; // Your API key
 
 const Filter = () => {
@@ -43,6 +44,7 @@ const Filter = () => {
 
     return (
         <div className="filter-container">
+            <NavBar/>
             <h2>Filter by Genre</h2>
             <select value={selectedGenre} onChange={handleGenreChange}>
                 <option value="">All Genres</option>
