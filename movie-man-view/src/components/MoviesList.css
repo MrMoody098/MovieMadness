@@ -14,6 +14,14 @@
     transition: transform 0.2s;
 }
 
+
+.movie-title h2{
+    font-size: 24px;
+    margin-bottom: 20px;
+    color: #f5c518; /* Optional: Highlight color */
+    text-align: center;
+}
+
 .movie-card:hover {
     transform: scale(1.05);
     background-color: #413f42;

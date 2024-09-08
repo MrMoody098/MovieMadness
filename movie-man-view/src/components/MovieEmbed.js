@@ -5,6 +5,7 @@ const MovieEmbed = ({ movieUrl }) => {
     <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0, overflow: 'hidden' }}>
         {console.log(movieUrl)}
       <iframe
+
         src={movieUrl}
         title="Embedded Movie"
         frameBorder="0"

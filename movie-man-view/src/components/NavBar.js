@@ -55,7 +55,7 @@ const NavBar = ({ onSearch, isModalOpen }) => {
               }}
           />
           <div className="nav-links">
-            <Link to="/explore">Explore AllUPDATEAS</Link>
+            <Link to="/explore">Explore</Link>
             <Link to="/movies">Movies</Link>
             <Link to="/tv-shows">TV Shows</Link>
             <Link to="/filter">Filter</Link>
