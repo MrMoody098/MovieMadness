@@ -1,7 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
 import "../Filter.css";
 import NavBar from "../NavBar";
+import Modal from 'react-modal';
+import MovieDetails from "../MovieDetails";
+import TvModal from "../TvModal";
 
 const TMDB_API_KEY = 'f58bf4f31de2a8346b5841b863457b1f'; // Your API key
 
@@ -12,6 +15,12 @@ const Filter = () => {
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
     const [isMovieMode, setIsMovieMode] = useState(true); // Switch mode
+    const [selectedItem, setSelectedItem] = useState(null); // State for selected item
+    const [isModalOpen, setIsModalOpen] = useState(false); // State for modal
+    const [loading, setLoading] = useState(false); // Loading state
+    const [minVoteCount, setMinVoteCount] = useState(20); // Minimum vote count
+    const [minRating, setMinRating] = useState(0); // Minimum rating
+    const [maxRating, setMaxRating] = useState(10); // Maximum rating
     const loaderRef = useRef(null);
 
     useEffect(() => {
@@ -30,10 +39,13 @@ const Filter = () => {
     }, [isMovieMode]);
 
     const fetchItemsByGenre = async (genreId, page) => {
+        if (loading) return; // Prevent multiple fetches
+
+        setLoading(true);
         try {
             const endpoint = isMovieMode
-                ? `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&with_genres=${genreId}&page=${page}`
-                : `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&with_genres=${genreId}&page=${page}`;
+                ? `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&sort_by=vote_average.desc&with_genres=${genreId}&page=${page}&vote_count.gte=${minVoteCount}&vote_average.gte=${minRating}&vote_average.lte=${maxRating}`
+                : `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&sort_by=vote_average.desc&with_genres=${genreId}&page=${page}&vote_count.gte=${minVoteCount}&vote_average.gte=${minRating}&vote_average.lte=${maxRating}`;
 
             const { data } = await axios.get(endpoint);
 
@@ -48,6 +60,8 @@ const Filter = () => {
             }
         } catch (error) {
             console.error('Error fetching items by genre:', error);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -58,44 +72,39 @@ const Filter = () => {
             setHasMore(true);
             fetchItemsByGenre(selectedGenre, 1);
         }
-    }, [selectedGenre, isMovieMode]);
+    }, [selectedGenre, isMovieMode, minVoteCount, minRating, maxRating]);
 
     const handleGenreChange = (event) => {
         const genreId = event.target.value;
         setSelectedGenre(genreId);
     };
 
-    useEffect(() => {
-        const fetchMoreItems = async () => {
-            if (hasMore) {
-                await fetchItemsByGenre(selectedGenre, page);
+    const handleScroll = useCallback(() => {
+        if (
+            window.innerHeight + document.documentElement.scrollTop + 50 >=
+            document.documentElement.offsetHeight
+        ) {
+            if (hasMore && !loading) {
+                setPage((prevPage) => prevPage + 1);
             }
-        };
-
-        fetchMoreItems();
-    }, [page]);
-
-    useEffect(() => {
-        const observer = new IntersectionObserver(
-            (entries) => {
-                if (entries[0].isIntersecting && hasMore) {
-                    console.log('Loader is in view');
-                    setPage((prevPage) => prevPage + 1);
-                }
-            },
-            { threshold: 1 }
-        );
-
-        if (loaderRef.current) {
-            observer.observe(loaderRef.current);
         }
+    }, [hasMore, loading]);
 
+    useEffect(() => {
+        window.addEventListener('scroll', handleScroll);
         return () => {
-            if (loaderRef.current) {
-                observer.unobserve(loaderRef.current);
-            }
+            window.removeEventListener('scroll', handleScroll);
         };
-    }, [hasMore]);
+    }, [handleScroll]);
+
+    const handleItemClick = (item) => {
+        setSelectedItem(item);
+        setIsModalOpen(true);
+    };
+
+    const closeModal = () => {
+        setIsModalOpen(false);
+    };
 
     return (
         <div className="filter-container">
@@ -114,20 +123,59 @@ const Filter = () => {
                     </label>
                     <span>{isMovieMode ? 'Movies' : 'TV Shows'}</span>
                 </div>
+                <br></br>
+                <select value={selectedGenre} onChange={handleGenreChange}>
+                    <option value="">All Genres</option>
+                    {genres.map((genre) => (
+                        <option key={genre.id} value={genre.id}>
+                            {genre.name}
+                        </option>
+                    ))}
+                </select>
+                <br></br>
+                {/* Input fields for min votes and rating */}
+                <div className="filter-inputs">
+                    <label>
+                        Min Vote Count:
+                        <input
+                            type="number"
+                            value={minVoteCount}
+                            onChange={(e) => setMinVoteCount(e.target.value)}
+                        />
+                    </label>
+                    <label>
+                        Min Rating:
+                        <input
+                            type="number"
+                            step="0.1"
+                            value={minRating}
+                            onChange={(e) => setMinRating(e.target.value)}
+                            min="0"
+                            max="10"
+                        />
+                    </label>
+                    <label>
+                        Max Rating:
+                        <input
+                            type="number"
+                            step="0.1"
+                            value={maxRating}
+                            onChange={(e) => setMaxRating(e.target.value)}
+                            min="0"
+                            max="10"
+                        />
+                    </label>
+                </div>
             </div>
 
-            <select value={selectedGenre} onChange={handleGenreChange}>
-                <option value="">All Genres</option>
-                {genres.map((genre) => (
-                    <option key={genre.id} value={genre.id}>
-                        {genre.name}
-                    </option>
-                ))}
-            </select>
 
             <div className="movies-container">
                 {items.map((item) => (
-                    <div key={item.id} className="movie-card">
+                    <div
+                        key={item.id}
+                        className="movie-card"
+                        onClick={() => handleItemClick(item)}
+                    >
                         <div className="movie-poster">
                             <img
                                 src={item.poster_path
@@ -145,7 +193,20 @@ const Filter = () => {
                 ))}
             </div>
 
-            {hasMore && <div ref={loaderRef} className="loader">Loading more...</div>}
+            {loading && <div>Loading...</div>}
+            {hasMore && !loading && <div ref={loaderRef} className="loader">Loading more...</div>}
+
+            <Modal
+                isOpen={isModalOpen}
+                onRequestClose={closeModal}
+                contentLabel="Details"
+            >
+                {selectedItem && (isMovieMode
+                        ? <MovieDetails movie={selectedItem} />
+                        : <TvModal tvShow={selectedItem} />
+                )}
+                <button onClick={closeModal}>Close</button>
+            </Modal>
         </div>
     );
 };

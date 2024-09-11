@@ -3,33 +3,41 @@
     padding: 20px;
     text-align: center;
     color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 /* Styling for the heading */
 .filter-container h2 {
     font-size: 24px;
-    margin-bottom: 20px;
-    color: #f5c518; /* Optional: Highlight color */
+    margin-bottom: 10px;
+    color: #f5c518; /* Highlight color */
 }
 
+/* Container for the switch and header */
 .filter-header {
     display: flex;
-    justify-content: center; /* Centering the content horizontally */
+    flex-direction: column;
     align-items: center;
     margin-bottom: 20px;
 }
 
+/* Switch container */
 .switch-container {
     display: flex;
     align-items: center;
-    margin-left: 20px; /* Adjust if needed */
+    margin-top: 10px;
+    margin-bottom: 20px;
 }
 
+/* Switch styling */
 .switch {
     position: relative;
     display: inline-block;
     width: 60px;
     height: 34px;
+    margin-right: 10px;
 }
 
 .switch input {
@@ -70,7 +78,7 @@ input:checked + .slider:before {
     transform: translateX(26px);
 }
 
-/* Genre dropdown styling */
+/* Dropdown styling for genre */
 .filter-container select {
     padding: 10px;
     border-radius: 10px;
@@ -79,13 +87,37 @@ input:checked + .slider:before {
     color: #fff;
     font-size: 16px;
     outline: none;
-    margin-bottom: 30px;
+    margin-bottom: 20px;
 }
 
 /* Dropdown option styles */
 .filter-container option {
     background-color: #3a3a3a;
     color: #fff;
+}
+
+/* Filter inputs (min vote, rating) */
+.filter-inputs {
+    display: flex;
+    flex-direction: row;
+    gap: 15px;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.filter-inputs label {
+    color: #ffffff;
+}
+
+.filter-inputs input {
+    padding: 5px;
+    font-size: 14px;
+    width: 80px;
+    background-color: #3a3a3a;
+    border: 1px solid #f5c518;
+    border-radius: 5px;
+    color: #ffffff;
+    outline: none;
 }
 
 /* Styling for the movie grid */
@@ -121,12 +153,7 @@ input:checked + .slider:before {
 }
 
 /* Movie title styling */
-.movie-card h3 {
-    color: #ffffff;
-    font-size: 1.2em;
-    margin: 10px 0;
-}
-
+.movie-card h3,
 .movie-card h2 {
     color: #ffffff;
     font-size: 1.2em;

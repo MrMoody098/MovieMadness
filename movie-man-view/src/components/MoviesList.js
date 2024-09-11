@@ -21,7 +21,7 @@ const MoviesList = () => {
     try {
       let url;
       if (query) {
-        url = `https://api.themoviedb.org/3/search/movie?api_key=${TMDB_API_KEY}&query=${query}&include_adult=false&language=en-US&page=${page}`;
+        url = `https://api.themoviedb.org/3/search/movie?api_key=${TMDB_API_KEY}&query=${query}&include_adult=true&language=en-US&page=${page}`;
       } else {
         url = `https://api.themoviedb.org/3/trending/movie/day?api_key=${TMDB_API_KEY}&page=${page}`;
       }
