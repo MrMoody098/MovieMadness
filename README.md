@@ -23,6 +23,7 @@ MovieMan is a React application that allows users to browse trending movies and 
 ### Prerequisites
 
 - Node.js and npm (Node Package Manager) installed. (https://www.npmjs.com/package/download)
+- An IDE to run the application from i reccomend Intellij Community Edition https://www.jetbrains.com/idea/ or Visual Studio (https://visualstudio.microsoft.com/)
 
 ### Installation
 
