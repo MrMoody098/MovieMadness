@@ -5,7 +5,7 @@ import TvModal from "../TvModal";
 import "./TVShows.css"
 
 const TMDB_API_KEY = 'f58bf4f31de2a8346b5841b863457b1f'; // Your API key
-const TVShows = () => {
+const TVShowsList = () => {
     const [tvShows, setTVShows] = useState([]);
     const [selectedTVShow, setSelectedTVShow] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -128,4 +128,4 @@ const TVShows = () => {
     );
 };
 
-export default TVShows;
+export default TVShowsList;

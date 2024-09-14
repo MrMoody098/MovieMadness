@@ -180,7 +180,8 @@ input:checked + .slider:before {
 }
 
 .movie-modal-content {
-    background-color: #fff;
+    background-color: Black;
+    color: #2f0463;
     padding: 20px;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);

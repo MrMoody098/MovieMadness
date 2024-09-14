@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import Modal from 'react-modal';
-import './TvModal.css'; // Import CSS for styling
+import './css/TvModal.css'; // Import CSS for styling
 
 const API_KEY = 'f58bf4f31de2a8346b5841b863457b1f';
 
@@ -56,7 +56,13 @@ const TvModal = ({ isOpen, onRequestClose, tvShow }) => {
         <Modal isOpen={isOpen} onRequestClose={onRequestClose} contentLabel="TV Show Episode">
             {tvShow && (
                 <div>
-                    <h2>{tvShow.name} - Season {seasonNumber} Episode {episodeNumber}</h2>
+                    <h2>{tvShow.name} - Season {seasonNumber} Episode {episodeNumber} -
+                        Rating {parseFloat(tvShow.vote_average).toFixed(1)|| 'N/A'}</h2>
+
+
+                    {/* Add TV Show description here */}
+                    <p className="tv-description">{tvShow.overview}</p>
+
                     {episodeUrl && (
                         <iframe
                             title={`${tvShow.name} - S${seasonNumber}E${episodeNumber}`}
@@ -66,14 +72,17 @@ const TvModal = ({ isOpen, onRequestClose, tvShow }) => {
                             allowFullScreen
                         ></iframe>
                     )}
+
                     <div className="episode-controls">
                         <button onClick={handlePrevEpisode}>Previous Episode</button>
                         <button onClick={handleNextEpisode}>Next Episode</button>
                     </div>
+
                     <div className="season-controls">
                         <button onClick={handlePrevSeason}>Previous Season</button>
                         <button onClick={handleNextSeason}>Next Season</button>
                     </div>
+
                     <button onClick={onRequestClose}>Close</button>
                 </div>
             )}

@@ -8,6 +8,7 @@
     text-align: center;
     background: linear-gradient(to bottom, rgb(100, 0, 128) 0.0001%, #000000 25%);
     min-height: 100vh;
+    position:sticky;
 }
 .navbar {
     position: fixed;

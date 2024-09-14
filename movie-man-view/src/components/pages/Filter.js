@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
-import "../Filter.css";
+import "../css/Filter.css";
 import NavBar from "../NavBar";
 import Modal from 'react-modal';
-import MovieDetails from "../MovieDetails";
+import MovieModal from "../MovieModal";
 import TvModal from "../TvModal";
 
 const TMDB_API_KEY = 'f58bf4f31de2a8346b5841b863457b1f'; // Your API key
@@ -74,6 +74,13 @@ const Filter = () => {
         }
     }, [selectedGenre, isMovieMode, minVoteCount, minRating, maxRating]);
 
+    useEffect(() => {
+        if (selectedGenre && page > 1) {
+            fetchItemsByGenre(selectedGenre, page);
+        }
+    }, [page]);
+
+
     const handleGenreChange = (event) => {
         const genreId = event.target.value;
         setSelectedGenre(genreId);
@@ -123,7 +130,6 @@ const Filter = () => {
                     </label>
                     <span>{isMovieMode ? 'Movies' : 'TV Shows'}</span>
                 </div>
-                <br></br>
                 <select value={selectedGenre} onChange={handleGenreChange}>
                     <option value="">All Genres</option>
                     {genres.map((genre) => (
@@ -132,7 +138,6 @@ const Filter = () => {
                         </option>
                     ))}
                 </select>
-                <br></br>
                 {/* Input fields for min votes and rating */}
                 <div className="filter-inputs">
                     <label>
@@ -202,7 +207,7 @@ const Filter = () => {
                 contentLabel="Details"
             >
                 {selectedItem && (isMovieMode
-                        ? <MovieDetails movie={selectedItem} />
+                        ? <MovieModal movie={selectedItem} />
                         : <TvModal tvShow={selectedItem} />
                 )}
                 <button onClick={closeModal}>Close</button>

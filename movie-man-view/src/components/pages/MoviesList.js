@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import './MoviesList.css';
-import MovieDetails from './MovieDetails';
+import '../css/MoviesList.css';
+import MovieModal from '../MovieModal';
 import Modal from 'react-modal';
-import NavBar from './NavBar';
+import NavBar from '../NavBar';
 
 const TMDB_API_KEY = 'f58bf4f31de2a8346b5841b863457b1f'; // Your API key
 
@@ -126,7 +126,7 @@ const MoviesList = () => {
               onRequestClose={closeModal}
               contentLabel="Movie Details"
           >
-            {selectedMovie && <MovieDetails movie={selectedMovie} />}
+            {selectedMovie && <MovieModal movie={selectedMovie} />}
             <button onClick={closeModal}>Close</button>
           </Modal>
         </div>

@@ -2,9 +2,9 @@
 import './App.css';
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import MoviesList from './components/MoviesList';
+import MoviesList from './components/pages/MoviesList';
 import NavBar from './components/NavBar';
-import TVShows from './components/pages/TVShows';
+import TVShowsList from './components/pages/TVShowsList';
 import Filter from './components/pages/Filter';
 import ExploreAll from './components/pages/ExploreAll';
 import TvModal from './components/TvModal';
@@ -37,7 +37,7 @@ function App() {
                         <Route path="/movies" element={<MoviesList />} />
                         <Route
                             path="/tv-shows"
-                            element={<TVShows openTvModal={openTvModal} />}
+                            element={<TVShowsList openTvModal={openTvModal} />}
                         />
                         <Route path="/filter" element={<Filter />} />
                     </Routes>
