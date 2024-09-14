@@ -1,0 +1,30 @@
+/* src/components/css/MovieModal.css */
+.movie-details-container {
+    background-color: #1e1e1e;
+    color: #ffffff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.movie-details-container h2 {
+    color: #f5c518; /* Highlight color */
+    margin-bottom: 10px;
+}
+
+.movie-description {
+    color: #cccccc;
+    margin-bottom: 20px;
+}
+
+iframe {
+    border: none;
+    border-radius: 10px;
+    display: block;
+    margin: 0 auto; /* Center the iframe */
+}
+
+.movie-details-container .movie-description {
+    font-size: 1em;
+    line-height: 1.5;
+}

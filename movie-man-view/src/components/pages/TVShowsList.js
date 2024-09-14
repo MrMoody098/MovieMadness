@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import NavBar from "../NavBar";
 import TvModal from "../TvModal";
-import "./TVShows.css"
+import "../css/TVShows.css"
 
 const TMDB_API_KEY = 'f58bf4f31de2a8346b5841b863457b1f'; // Your API key
 const TVShowsList = () => {

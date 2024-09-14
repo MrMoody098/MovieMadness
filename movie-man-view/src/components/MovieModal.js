@@ -1,5 +1,6 @@
 import React from 'react';
 import "./css/MoviesList.css";
+import "./css/MovieModal.css";
 
 const MovieModal = ({ movie }) => {
     if (!movie) {

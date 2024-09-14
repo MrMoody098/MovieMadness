@@ -5,7 +5,7 @@ import NavBar from "../NavBar";
 import Modal from 'react-modal';
 import MovieModal from "../MovieModal";
 import TvModal from "../TvModal";
-
+import "../css/Modal.css";
 const TMDB_API_KEY = 'f58bf4f31de2a8346b5841b863457b1f'; // Your API key
 
 const Filter = () => {
@@ -208,7 +208,9 @@ const Filter = () => {
             >
                 {selectedItem && (isMovieMode
                         ? <MovieModal movie={selectedItem} />
-                        : <TvModal tvShow={selectedItem} />
+                        : <TvModal    isOpen={isModalOpen}
+                                      onRequestClose={closeModal}
+                                      tvShow={selectedItem} />
                 )}
                 <button onClick={closeModal}>Close</button>
             </Modal>

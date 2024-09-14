@@ -1,0 +1,28 @@
+/* src/components/css/Modal.css */
+.ReactModal__Overlay {
+    background-color: rgba(0, 0, 0, 0.7) !important;
+}
+
+.ReactModal__Content {
+    background-color: #1e1e1e !important;
+    color: #ffffff !important;
+    border-radius: 10px;
+    padding: 20px;
+    max-width: 800px;
+    margin: auto;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.ReactModal__Content button {
+    background-color: #f5c518;
+    color: #1e1e1e;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 20px;
+}
+
+.ReactModal__Content button:hover {
+    background-color: #e5b518;
+}
