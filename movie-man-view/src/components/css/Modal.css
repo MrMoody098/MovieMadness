@@ -2,7 +2,6 @@
 .ReactModal__Overlay {
     background-color: rgba(0, 0, 0, 0.7) !important;
     z-index: 2000; /* Ensure modal overlay is above NavBar */
-
 }
 
 .ReactModal__Content {
@@ -28,4 +27,24 @@
 
 .ReactModal__Content button:hover {
     background-color: #e5b518;
+}
+
+/* Custom dark-themed scroll bar */
+.ReactModal__Content::-webkit-scrollbar {
+    width: 12px;
+}
+
+.ReactModal__Content::-webkit-scrollbar-track {
+    background: #2e2e2e;
+    border-radius: 10px;
+}
+
+.ReactModal__Content::-webkit-scrollbar-thumb {
+    background-color: #555;
+    border-radius: 10px;
+    border: 3px solid #2e2e2e;
+}
+
+.ReactModal__Content::-webkit-scrollbar-thumb:hover {
+    background-color: #777;
 }

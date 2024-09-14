@@ -12,6 +12,7 @@ const TvModal = ({ isOpen, onRequestClose, tvShow, onTvShowSelect }) => {
     const [episodeNumber, setEpisodeNumber] = useState(1);
     const [autoSkip, setAutoSkip] = useState(false);
     const [recommendedShows, setRecommendedShows] = useState([]);
+    const [similarShows, setSimilarShows] = useState([]);
     const videoRef = useRef(null);
 
     useEffect(() => {
@@ -46,6 +47,24 @@ const TvModal = ({ isOpen, onRequestClose, tvShow, onTvShowSelect }) => {
         };
 
         fetchRecommendedShows();
+    }, [tvShow]);
+
+    useEffect(() => {
+        const fetchSimilarShows = async () => {
+            if (tvShow) {
+                try {
+                    const { data } = await axios.get(
+                        `https://api.themoviedb.org/3/tv/${tvShow.id}/similar?api_key=${API_KEY}`
+                    );
+                    const filteredShows = data.results.filter(simShow => simShow.vote_count > 200);
+                    setSimilarShows(filteredShows);
+                } catch (error) {
+                    console.error('Error fetching similar shows:', error);
+                }
+            }
+        };
+
+        fetchSimilarShows();
     }, [tvShow]);
 
     useEffect(() => {
@@ -151,6 +170,25 @@ const TvModal = ({ isOpen, onRequestClose, tvShow, onTvShowSelect }) => {
                         </div>
                     </div>
 
+                    <div className="recommended-movies">
+                        <h3>Similar Shows</h3>
+                        <div className="movies-container">
+                            {similarShows.map((simShow) => (
+                                <div className="movie-card" key={simShow.id} onClick={() => onTvShowSelect(simShow)}>
+                                    <div className="movie-poster">
+                                        <img
+                                            src={simShow.poster_path ? `https://image.tmdb.org/t/p/w500/${simShow.poster_path}` : 'default-poster.jpg'}
+                                            alt={simShow.name}
+                                        />
+                                    </div>
+                                    <div className="movie-details">
+                                        <h2>{simShow.name}</h2>
+                                        <p>Rating: {simShow.vote_average || 'N/A'}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
                 </div>
             )}
         </Modal>

@@ -7,15 +7,11 @@
     <list default="true" id="407bc910-784e-4176-9897-a3b0eada7771" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/movie-man-view/src/App.css" beforeDir="false" afterPath="$PROJECT_DIR$/movie-man-view/src/App.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/movie-man-view/src/App.js" beforeDir="false" afterPath="$PROJECT_DIR$/movie-man-view/src/App.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/movie-man-view/src/components/MovieModal.js" beforeDir="false" afterPath="$PROJECT_DIR$/movie-man-view/src/components/MovieModal.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/movie-man-view/src/components/TvModal.js" beforeDir="false" afterPath="$PROJECT_DIR$/movie-man-view/src/components/TvModal.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/movie-man-view/src/components/css/Filter.css" beforeDir="false" afterPath="$PROJECT_DIR$/movie-man-view/src/components/css/Filter.css" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/movie-man-view/src/components/css/Modal.css" beforeDir="false" afterPath="$PROJECT_DIR$/movie-man-view/src/components/css/Modal.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/movie-man-view/src/components/css/MovieModal.css" beforeDir="false" afterPath="$PROJECT_DIR$/movie-man-view/src/components/css/MovieModal.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/movie-man-view/src/components/css/MoviesList.css" beforeDir="false" afterPath="$PROJECT_DIR$/movie-man-view/src/components/css/MoviesList.css" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/movie-man-view/src/components/css/TVShows.css" beforeDir="false" afterPath="$PROJECT_DIR$/movie-man-view/src/components/css/TVShows.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/movie-man-view/src/components/css/TvModal.css" beforeDir="false" afterPath="$PROJECT_DIR$/movie-man-view/src/components/css/TvModal.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/movie-man-view/src/components/pages/Filter.js" beforeDir="false" afterPath="$PROJECT_DIR$/movie-man-view/src/components/pages/Filter.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/movie-man-view/src/components/pages/MoviesList.js" beforeDir="false" afterPath="$PROJECT_DIR$/movie-man-view/src/components/pages/MoviesList.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/movie-man-view/src/components/pages/TVShowsList.js" beforeDir="false" afterPath="$PROJECT_DIR$/movie-man-view/src/components/pages/TVShowsList.js" afterDir="false" />
     </list>
@@ -85,7 +81,7 @@
       <workItem from="1725823500647" duration="420000" />
       <workItem from="1725824129604" duration="71000" />
       <workItem from="1726330978079" duration="8579000" />
-      <workItem from="1726341146171" duration="1963000" />
+      <workItem from="1726341146171" duration="6605000" />
     </task>
     <servers />
   </component>

@@ -1,43 +1,94 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import NavBar from '../NavBar';
 import MovieModal from '../MovieModal';
 import Modal from 'react-modal';
 import '../css/MoviesList.css';
 import useFetchItems from '../hooks/useFetchItems';
+import { addMovieId, getMovieIds } from '../utils/recentlyWatched';
+import axios from 'axios';
+
+const API_KEY = 'f58bf4f31de2a8346b5841b863457b1f';
 
 const MoviesList = () => {
     const {
         items: movies,
         selectedItem: selectedMovie,
         isModalOpen,
-        searchQuery,
         setSearchQuery,
-        hasMore,
         loading,
         handleItemClick,
         closeModal,
     } = useFetchItems('movie');
 
-    const handleMovieSelect = (movie) => {
-        handleItemClick(movie);
+    const [recentlyWatched, setRecentlyWatched] = useState([]);
+    const carouselRef = useRef(null);
+
+    const fetchRecentlyWatchedMovies = async () => {
+        const movieIds = getMovieIds();
+        const movieDetailsPromises = movieIds.map(id =>
+            axios.get(`https://api.themoviedb.org/3/movie/${id}?api_key=${API_KEY}`)
+        );
+        const movieDetails = await Promise.all(movieDetailsPromises);
+        setRecentlyWatched(movieDetails.map(response => response.data));
     };
+
+    useEffect(() => {
+        fetchRecentlyWatchedMovies();
+    }, []);
+
+    const handleMovieSelect = (movie) => {
+        addMovieId(movie.id);
+        handleItemClick(movie);
+        fetchRecentlyWatchedMovies(); // Update recently watched movies
+    };
+
+    const handleDeleteMovie = (movieId) => {
+        let movieIds = getMovieIds();
+        movieIds = movieIds.filter(id => id !== movieId);
+        localStorage.setItem('recentlyWatched', JSON.stringify(movieIds));
+        fetchRecentlyWatchedMovies(); // Update recently watched movies
+    };
+
+    useEffect(() => {
+        const carousel = carouselRef.current;
+        const handleScroll = (event) => {
+            if (event.deltaY !== 0) {
+                event.preventDefault();
+                carousel.scrollLeft += event.deltaY;
+            }
+        };
+        carousel.addEventListener('wheel', handleScroll);
+        return () => {
+            carousel.removeEventListener('wheel', handleScroll);
+        };
+    }, []);
 
     return (
         <div>
             <NavBar isModalOpen={isModalOpen} onSearch={setSearchQuery} />
-            <div className={"movie-title"}><h2>Movies</h2></div>
+            <div className="recently-watched">
+                <h2>Recently Watched</h2>
+                <div className="carousel" ref={carouselRef}>
+                    {recentlyWatched.map((movie) => (
+                        <div className="movie-card" key={movie.id}>
+                            <button className="delete-button" onClick={() => handleDeleteMovie(movie.id)}>X</button>
+                            <div className="movie-poster" onClick={() => handleMovieSelect(movie)}>
+                                <img src={`https://image.tmdb.org/t/p/w500/${movie.poster_path}`} alt={movie.title} />
+                            </div>
+                            <div className="movie-details">
+                                <h2>{movie.title}</h2>
+                                <p>Rating: {movie.vote_average || 'N/A'}</p>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+            <div className="movie-title"><h2>Movies</h2></div>
             <div className="movies-container">
                 {movies.map((movie) => (
-                    <div
-                        className="movie-card"
-                        key={movie.id}
-                        onClick={() => handleMovieSelect(movie)}
-                    >
+                    <div className="movie-card" key={movie.id} onClick={() => handleMovieSelect(movie)}>
                         <div className="movie-poster">
-                            <img
-                                src={movie.poster}
-                                alt={movie.title}
-                            />
+                            <img src={movie.poster} alt={movie.title} />
                         </div>
                         <div className="movie-details">
                             <h2>{movie.title}</h2>
@@ -46,15 +97,10 @@ const MoviesList = () => {
                     </div>
                 ))}
 
-                {hasMore && <div className="loader">Loading more movies...</div>}
+                {loading && <div className="loader">Loading more movies...</div>}
 
-                <Modal
-                    isOpen={isModalOpen}
-                    onRequestClose={closeModal}
-                    contentLabel="Movie Details"
-                >
+                <Modal isOpen={isModalOpen} onRequestClose={closeModal} contentLabel="Movie Details">
                     <button onClick={closeModal}>Close</button>
-
                     {selectedMovie && <MovieModal movie={selectedMovie} onMovieSelect={handleMovieSelect} />}
                 </Modal>
             </div>
@@ -65,3 +111,4 @@ const MoviesList = () => {
 };
 
 export default MoviesList;
+

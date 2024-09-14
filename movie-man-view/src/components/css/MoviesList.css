@@ -7,6 +7,7 @@
 }
 
 .movie-card {
+    position: relative; /* Ensure the delete button is positioned relative to the card */
     border-radius: 15px;
     padding: 20px;
     width: 200px;
@@ -14,6 +15,23 @@
     transition: transform 0.2s;
 }
 
+.delete-button {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background-color: red;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 20px;
+    text-align: center;
+    z-index: 10; /* Higher z-index on hover */
+
+}
 
 .movie-title h2{
     font-size: 24px;
@@ -27,12 +45,11 @@
     background-color: #413f42;
     opacity: 95%;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    z-index: 10; /* Higher z-index on hover */
 
 }
 
 .movie-poster {
-    opacity: 100;
-    background-color: #ddd;
     border-radius: 15px;
     height: 300px;
     margin-bottom: 10px;
@@ -73,4 +90,52 @@
     padding: 0px;
     border-radius: 0px;
     box-shadow: 0 2px 4px rgba(2, 44, 0, 0.1);
+}
+.recently-watched {
+    margin: 20px 0;
+}
+
+.carousel {
+    padding: 20px;
+
+    display: flex;
+    overflow-x: auto;
+    overflow-y: hidden; /* Hide vertical scrollbar */
+    gap: 10px;
+    scroll-snap-type: x mandatory; /* Optional: for snapping effect */
+    position: relative; /* Ensure it captures scroll events */
+    z-index: 10;
+}
+
+.carousel::-webkit-scrollbar {
+    display: none; /* Hide scrollbar for WebKit browsers */
+}
+
+.carousel .movie-card {
+    flex: 0 0 auto;
+    width: 150px;
+    scroll-snap-align: start; /* Optional: for snapping effect */
+}
+.recently-watched-tv {
+    margin: 20px 0;
+}
+
+.carousel-tv {
+    padding:20px;
+    display: flex;
+    overflow-x: auto;
+    overflow-y: hidden; /* Hide vertical scrollbar */
+    gap: 10px;
+    scroll-snap-type: x mandatory; /* Optional: for snapping effect */
+    position: relative; /* Ensure it captures scroll events */
+}
+
+.carousel-tv::-webkit-scrollbar {
+    display: none; /* Hide scrollbar for WebKit browsers */
+}
+
+.carousel-tv .tv-card {
+    flex: 0 0 auto;
+    width: 150px;
+    scroll-snap-align: start; /* Optional: for snapping effect */
 }
