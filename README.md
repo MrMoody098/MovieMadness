@@ -22,7 +22,8 @@ MovieMan is a React application that allows users to browse trending movies and 
 
 ### Prerequisites
 
-- Node.js and npm (Node Package Manager) installed.
+- Node.js and npm (Node Package Manager) installed. (https://www.npmjs.com/package/download)
+- An IDE to run the application from i reccomend Intellij Community Edition https://www.jetbrains.com/idea/ or Visual Studio (https://visualstudio.microsoft.com/)
 
 ### Installation
 
@@ -71,8 +72,7 @@ You need to replace the `TMDB_API_KEY` placeholder with your own API key from Th
 Feel free to fork the repository and submit pull requests. If you encounter any issues or have suggestions for improvements, please open an issue on GitHub.
 
 ## License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+Open source of course
 
 ## Acknowledgments
 
