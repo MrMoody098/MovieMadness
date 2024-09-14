@@ -10,7 +10,9 @@ const TMDB_API_KEY = 'f58bf4f31de2a8346b5841b863457b1f'; // Your API key
 
 const Filter = () => {
     const [genres, setGenres] = useState([]);
+    const [languages, setLanguages] = useState([]);
     const [selectedGenre, setSelectedGenre] = useState('');
+    const [selectedLanguage, setSelectedLanguage] = useState('');
     const [items, setItems] = useState([]);
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
@@ -18,7 +20,7 @@ const Filter = () => {
     const [selectedItem, setSelectedItem] = useState(null); // State for selected item
     const [isModalOpen, setIsModalOpen] = useState(false); // State for modal
     const [loading, setLoading] = useState(false); // Loading state
-    const [minVoteCount, setMinVoteCount] = useState(20); // Minimum vote count
+    const [minVoteCount, setMinVoteCount] = useState(200); // Minimum vote count
     const [minRating, setMinRating] = useState(0); // Minimum rating
     const [maxRating, setMaxRating] = useState(10); // Maximum rating
     const loaderRef = useRef(null);
@@ -35,7 +37,19 @@ const Filter = () => {
             }
         };
 
+        const fetchLanguages = async () => {
+            try {
+                const { data } = await axios.get(
+                    `https://api.themoviedb.org/3/configuration/languages?api_key=${TMDB_API_KEY}`
+                );
+                setLanguages(data);
+            } catch (error) {
+                console.error('Error fetching languages:', error);
+            }
+        };
+
         fetchGenres();
+        fetchLanguages();
     }, [isMovieMode]);
 
     const fetchItemsByGenre = async (genreId, page) => {
@@ -43,9 +57,10 @@ const Filter = () => {
 
         setLoading(true);
         try {
+            const genreFilter = genreId ? `&with_genres=${genreId}` : '';
             const endpoint = isMovieMode
-                ? `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&sort_by=vote_average.desc&with_genres=${genreId}&page=${page}&vote_count.gte=${minVoteCount}&vote_average.gte=${minRating}&vote_average.lte=${maxRating}`
-                : `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&sort_by=vote_average.desc&with_genres=${genreId}&page=${page}&vote_count.gte=${minVoteCount}&vote_average.gte=${minRating}&vote_average.lte=${maxRating}`;
+                ? `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&sort_by=vote_average.desc&page=${page}&vote_count.gte=${minVoteCount}&vote_average.gte=${minRating}&vote_average.lte=${maxRating}&with_original_language=${selectedLanguage}${genreFilter}`
+                : `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&sort_by=vote_average.desc&page=${page}&vote_count.gte=${minVoteCount}&vote_average.gte=${minRating}&vote_average.lte=${maxRating}&with_original_language=${selectedLanguage}${genreFilter}`;
 
             const { data } = await axios.get(endpoint);
 
@@ -66,24 +81,26 @@ const Filter = () => {
     };
 
     useEffect(() => {
-        if (selectedGenre) {
-            setItems([]);
-            setPage(1);
-            setHasMore(true);
-            fetchItemsByGenre(selectedGenre, 1);
-        }
-    }, [selectedGenre, isMovieMode, minVoteCount, minRating, maxRating]);
+        setItems([]);
+        setPage(1);
+        setHasMore(true);
+        fetchItemsByGenre(selectedGenre, 1);
+    }, [selectedGenre, isMovieMode, minVoteCount, minRating, maxRating, selectedLanguage]);
 
     useEffect(() => {
-        if (selectedGenre && page > 1) {
+        if (page > 1) {
             fetchItemsByGenre(selectedGenre, page);
         }
     }, [page]);
 
-
     const handleGenreChange = (event) => {
         const genreId = event.target.value;
         setSelectedGenre(genreId);
+    };
+
+    const handleLanguageChange = (event) => {
+        const languageCode = event.target.value;
+        setSelectedLanguage(languageCode);
     };
 
     const handleScroll = useCallback(() => {
@@ -115,7 +132,7 @@ const Filter = () => {
 
     return (
         <div className="filter-container">
-            <NavBar />
+            <NavBar isModalOpen={isModalOpen}  />
 
             <div className="filter-header">
                 <h2>Filter by Genre</h2>
@@ -138,7 +155,14 @@ const Filter = () => {
                         </option>
                     ))}
                 </select>
-                {/* Input fields for min votes and rating */}
+                <select value={selectedLanguage} onChange={handleLanguageChange}>
+                    <option value="">All Languages</option>
+                    {languages.map((language) => (
+                        <option key={language.iso_639_1} value={language.iso_639_1}>
+                            {language.english_name}
+                        </option>
+                    ))}
+                </select>
                 <div className="filter-inputs">
                     <label>
                         Min Vote Count:
@@ -173,7 +197,6 @@ const Filter = () => {
                 </div>
             </div>
 
-
             <div className="movies-container">
                 {items.map((item) => (
                     <div
@@ -206,13 +229,13 @@ const Filter = () => {
                 onRequestClose={closeModal}
                 contentLabel="Details"
             >
-                {selectedItem && (isMovieMode
-                        ? <MovieModal movie={selectedItem} />
-                        : <TvModal    isOpen={isModalOpen}
-                                      onRequestClose={closeModal}
-                                      tvShow={selectedItem} />
-                )}
                 <button onClick={closeModal}>Close</button>
+                {selectedItem && (isMovieMode
+                        ? <MovieModal movie={selectedItem}/>
+                        : <TvModal isOpen={isModalOpen}
+                                   onRequestClose={closeModal}
+                                   tvShow={selectedItem}/>
+                )}
             </Modal>
         </div>
     );

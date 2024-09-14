@@ -1,4 +1,4 @@
-/* src/TvModal.css */
+/* src/components/css/TvModal.css */
 
 .episode-controls, .season-controls {
     display: flex;
@@ -7,8 +7,8 @@
 }
 
 .episode-controls button, .season-controls button {
-    background-color: #171716;
-    color: #fff;
+    background-color: #f5c518;
+    color: #000000;
     border: none;
     border-radius: 5px;
     padding: 10px 20px;
@@ -17,5 +17,85 @@
 }
 
 .episode-controls button:hover, .season-controls button:hover {
-    background-color: #333;
+    background-color: #e5b518;
+}
+
+.recommended-shows {
+    margin-top: 20px;
+}
+
+.recommended-shows h3 {
+    margin-bottom: 10px;
+}
+
+.recommended-shows .shows-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    padding: 20px;
+    justify-content: space-between; /* Adjust to space between items */
+}
+
+.recommended-shows .show-card {
+    border-radius: 15px;
+    padding: 20px;
+    width: calc(25% - 20px); /* Adjust width to fit four items in a row */
+    text-align: center;
+    transition: transform 0.2s;
+}
+
+.recommended-shows .show-card:hover {
+    transform: scale(1.05);
+    background-color: #413f42;
+    opacity: 95%;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.recommended-shows .show-poster {
+    opacity: 100;
+    background-color: #ddd;
+    border-radius: 15px;
+    height: 200px; /* Adjust height as needed */
+    margin-bottom: 10px;
+    overflow: hidden; /* Ensures the image is clipped to the border radius */
+}
+
+.recommended-shows .show-poster img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Ensures the image covers the area without distortion */
+}
+
+.recommended-shows .show-details h2 {
+    margin: 10px 0;
+    font-size: 1.2em;
+}
+
+.recommended-shows .show-details {
+    margin: 5px 0;
+    color: #ffff;
+}
+
+/* Example styles for the overlay */
+.tvshow-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: Black; /* Semi-transparent background */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.tvshow-modal-content {
+    background-color: Black;
+    padding: 20px; /* Adjust padding as needed */
+    border-radius: 10px; /* Adjust border radius as needed */
+    box-shadow: 0 2px 4px rgba(2, 44, 0, 0.1);
+    width: 90%; /* Adjust width to make the modal bigger */
+    max-width: 1400px; /* Set a maximum width */
+    height: 90%; /* Adjust height as needed */
+    overflow-y: auto; /* Enable scrolling if content overflows */
 }
