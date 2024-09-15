@@ -13,6 +13,7 @@ const TvModal = ({ isOpen, onRequestClose, tvShow, onTvShowSelect }) => {
     const [autoSkip, setAutoSkip] = useState(false);
     const [recommendedShows, setRecommendedShows] = useState([]);
     const [similarShows, setSimilarShows] = useState([]);
+    const topRef = useRef(null);
     const videoRef = useRef(null);
 
     useEffect(() => {
@@ -82,6 +83,11 @@ const TvModal = ({ isOpen, onRequestClose, tvShow, onTvShowSelect }) => {
         }
     }, [autoSkip]);
 
+    const handleTvShowSelect = (selectedShow) => {
+        onTvShowSelect(selectedShow);
+        topRef.current.scrollIntoView({ behavior: 'smooth' });
+    };
+
     const handlePrevEpisode = () => {
         if (episodeNumber > 1) {
             setEpisodeNumber(prev => prev - 1);
@@ -110,7 +116,7 @@ const TvModal = ({ isOpen, onRequestClose, tvShow, onTvShowSelect }) => {
     return (
         <Modal isOpen={isOpen} onRequestClose={onRequestClose} contentLabel="TV Show Episode">
             {tvShow && (
-                <div className="movie-details-container">
+                <div className="movie-details-container" ref={topRef}>
                     <button onClick={onRequestClose}>Close</button>
                     <h2>{tvShow.name} - Season {seasonNumber} Episode {episodeNumber} -
                         Rating {parseFloat(tvShow.vote_average).toFixed(1) || 'N/A'}</h2>
@@ -154,7 +160,7 @@ const TvModal = ({ isOpen, onRequestClose, tvShow, onTvShowSelect }) => {
                         <h3>Recommended Shows</h3>
                         <div className="movies-container">
                             {recommendedShows.map((recShow) => (
-                                <div className="movie-card" key={recShow.id} onClick={() => onTvShowSelect(recShow)}>
+                                <div className="movie-card" key={recShow.id} onClick={() => handleTvShowSelect(recShow)}>
                                     <div className="movie-poster">
                                         <img
                                             src={recShow.poster_path ? `https://image.tmdb.org/t/p/w500/${recShow.poster_path}` : 'default-poster.jpg'}
@@ -174,7 +180,7 @@ const TvModal = ({ isOpen, onRequestClose, tvShow, onTvShowSelect }) => {
                         <h3>Similar Shows</h3>
                         <div className="movies-container">
                             {similarShows.map((simShow) => (
-                                <div className="movie-card" key={simShow.id} onClick={() => onTvShowSelect(simShow)}>
+                                <div className="movie-card" key={simShow.id} onClick={() => handleTvShowSelect(simShow)}>
                                     <div className="movie-poster">
                                         <img
                                             src={simShow.poster_path ? `https://image.tmdb.org/t/p/w500/${simShow.poster_path}` : 'default-poster.jpg'}

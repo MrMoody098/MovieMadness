@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import "../css/MoviesList.css";
 import "../css/MovieModal.css";
@@ -8,6 +8,7 @@ const API_KEY = 'f58bf4f31de2a8346b5841b863457b1f';
 const MovieModal = ({ movie, onMovieSelect }) => {
     const [recommendedMovies, setRecommendedMovies] = useState([]);
     const [similarMovies, setSimilarMovies] = useState([]);
+    const topRef = useRef(null);
 
     useEffect(() => {
         const fetchRecommendedMovies = async () => {
@@ -45,6 +46,11 @@ const MovieModal = ({ movie, onMovieSelect }) => {
         fetchSimilarMovies();
     }, [movie]);
 
+    const handleMovieSelect = (selectedMovie) => {
+        onMovieSelect(selectedMovie);
+        topRef.current.scrollIntoView({ behavior: 'smooth' });
+    };
+
     if (!movie) {
         return <div>Loading...</div>; // Or any other loading indicator
     }
@@ -52,7 +58,7 @@ const MovieModal = ({ movie, onMovieSelect }) => {
     const movieEmbedUrl = `https://vidsrc.xyz/embed/movie/${movie.id}`;
 
     return (
-        <div className="movie-details-container">
+        <div className="movie-details-container" ref={topRef}>
             <div>
                 <h2>{movie.title} - Rating {parseFloat(movie.vote_average).toFixed(1) || 'N/A'}</h2>
                 <p className="movie-description">{movie.overview}</p>
@@ -77,7 +83,7 @@ const MovieModal = ({ movie, onMovieSelect }) => {
                 <h3>Recommended Movies</h3>
                 <div className="movies-container">
                     {recommendedMovies.map((recMovie) => (
-                        <div className="movie-card" key={recMovie.id} onClick={() => onMovieSelect(recMovie)}>
+                        <div className="movie-card" key={recMovie.id} onClick={() => handleMovieSelect(recMovie)}>
                             <div className="movie-poster">
                                 <img
                                     src={recMovie.poster_path ? `https://image.tmdb.org/t/p/w500/${recMovie.poster_path}` : 'default-poster.jpg'}
@@ -96,7 +102,7 @@ const MovieModal = ({ movie, onMovieSelect }) => {
                 <h3>Similar Movies</h3>
                 <div className="movies-container">
                     {similarMovies.map((simMovie) => (
-                        <div className="movie-card" key={simMovie.id} onClick={() => onMovieSelect(simMovie)}>
+                        <div className="movie-card" key={simMovie.id} onClick={() => handleMovieSelect(simMovie)}>
                             <div className="movie-poster">
                                 <img
                                     src={simMovie.poster_path ? `https://image.tmdb.org/t/p/w500/${simMovie.poster_path}` : 'default-poster.jpg'}
