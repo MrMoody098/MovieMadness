@@ -6,7 +6,7 @@ import NavBar from './components/NavBar';
 import TVShowsList from './components/pages/TVShowsList';
 import Filter from './components/pages/Filter';
 import ExploreAll from './components/pages/ExploreAll';
-import TvModal from './components/TvModal';
+import TvModal from './components/modals/TvModal';
 import Modal from 'react-modal';
 
 // Set the root element for accessibility

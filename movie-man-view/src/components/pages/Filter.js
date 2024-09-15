@@ -3,8 +3,8 @@ import axios from 'axios';
 import "../css/Filter.css";
 import NavBar from "../NavBar";
 import Modal from 'react-modal';
-import MovieModal from "../MovieModal";
-import TvModal from "../TvModal";
+import MovieModal from "../modals/MovieModal";
+import TvModal from "../modals/TvModal";
 import "../css/Modal.css";
 const TMDB_API_KEY = 'f58bf4f31de2a8346b5841b863457b1f'; // Your API key
 

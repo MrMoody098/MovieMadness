@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import Modal from 'react-modal';
-import './css/TvModal.css';
-import './css/MoviesList.css';
+import '../css/TvModal.css';
+import '../css/MoviesList.css';
 
 const API_KEY = 'f58bf4f31de2a8346b5841b863457b1f';
 

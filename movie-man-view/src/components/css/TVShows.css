@@ -83,12 +83,14 @@ h2{
 }
 
 .carousel-tv {
+    padding: 20px;
+
     display: flex;
     overflow-x: auto;
     overflow-y: hidden; /* Hide vertical scrollbar */
     gap: 10px;
-    scroll-snap-type: x mandatory; /* Optional: for snapping effect */
     position: relative; /* Ensure it captures scroll events */
+    z-index: 10;
 }
 
 .carousel-tv::-webkit-scrollbar {
@@ -98,8 +100,7 @@ h2{
 .carousel-tv .tv-card {
     flex: 0 0 auto;
     width: 150px;
-    scroll-snap-align: start; /* Optional: for snapping effect */
-    position: relative;
+    scroll-snap-align: start;
 }
 
 .delete-button {

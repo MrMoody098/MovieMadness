@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import NavBar from "../NavBar";
-import TvModal from "../TvModal";
-import "../css/TVShows.css";
+import TvModal from "../modals/TvModal";
+import "../css/MoviesList.css";
 import useFetchItems from '../hooks/useFetchItems';
 import { addTvShowId, getTvShowIds } from '../utils/recentlyWatchedTv';
 
@@ -67,9 +67,9 @@ const TVShowsList = () => {
     return (
         <div>
             <NavBar isModalOpen={isModalOpen} onSearch={setSearchQuery} />
-            <div className="recently-watched-tv">
+            <div className="recently-watched">
                 <h2>Recently Watched TV Shows</h2>
-                <div className="carousel-tv" ref={carouselTvRef}>
+                <div className="carousel" ref={carouselTvRef}>
                     {recentlyWatchedTv.map((tvShow) => (
                         <div className="movie-card" key={tvShow.id}>
                             <button className="delete-button" onClick={() => handleDeleteTvShow(tvShow.id)}>X</button>
@@ -84,7 +84,7 @@ const TVShowsList = () => {
                     ))}
                 </div>
             </div>
-            <div className="tv-title"><h2>TV Shows</h2></div>
+            <div className="movie-title"><h2>TV Shows</h2></div>
             <div className="movies-container">
                 {tvShows.map((tvShow) => (
                     <div className="movie-card" key={tvShow.id} onClick={() => handleTvShowSelect(tvShow)}>

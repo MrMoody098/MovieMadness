@@ -102,7 +102,6 @@
     overflow-x: auto;
     overflow-y: hidden; /* Hide vertical scrollbar */
     gap: 10px;
-    scroll-snap-type: x mandatory; /* Optional: for snapping effect */
     position: relative; /* Ensure it captures scroll events */
     z-index: 10;
 }
@@ -114,7 +113,6 @@
 .carousel .movie-card {
     flex: 0 0 auto;
     width: 150px;
-    scroll-snap-align: start; /* Optional: for snapping effect */
 }
 .recently-watched-tv {
     margin: 20px 0;
@@ -126,7 +124,6 @@
     overflow-x: auto;
     overflow-y: hidden; /* Hide vertical scrollbar */
     gap: 10px;
-    scroll-snap-type: x mandatory; /* Optional: for snapping effect */
     position: relative; /* Ensure it captures scroll events */
 }
 
@@ -137,5 +134,7 @@
 .carousel-tv .tv-card {
     flex: 0 0 auto;
     width: 150px;
-    scroll-snap-align: start; /* Optional: for snapping effect */
+}
+.recently-watched{
+    color:#f5c518;
 }

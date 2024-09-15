@@ -22,7 +22,7 @@ const useFetchItems = (type) => {
             if (query) {
                 url = `https://api.themoviedb.org/3/search/${type}?api_key=${TMDB_API_KEY}&query=${query}&include_adult=false&language=en-US&page=${page}`;
             } else {
-                url = `https://api.themoviedb.org/3/trending/${type}/day?api_key=${TMDB_API_KEY}&page=${page}`;
+                url = `https://api.themoviedb.org/3/trending/${type}/day?api_key=${TMDB_API_KEY}&page=${page}&voting_count.gte=250`;
             }
 
             const { data } = await axios.get(url);

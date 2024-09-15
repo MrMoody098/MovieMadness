@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import NavBar from '../NavBar';
-import MovieModal from '../MovieModal';
+import MovieModal from '../modals/MovieModal';
 import Modal from 'react-modal';
 import '../css/MoviesList.css';
 import useFetchItems from '../hooks/useFetchItems';
