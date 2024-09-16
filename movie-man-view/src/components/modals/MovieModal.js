@@ -9,6 +9,7 @@ const MovieModal = ({ movie, onMovieSelect }) => {
     const [recommendedMovies, setRecommendedMovies] = useState([]);
     const [similarMovies, setSimilarMovies] = useState([]);
     const topRef = useRef(null);
+    const iframeRef = useRef(null);
 
     useEffect(() => {
         const fetchRecommendedMovies = async () => {
@@ -75,6 +76,7 @@ const MovieModal = ({ movie, onMovieSelect }) => {
                             width: '100%',
                             height: '100%'
                         }}
+                        ref={iframeRef}
                     />
                 </div>
             </div>
