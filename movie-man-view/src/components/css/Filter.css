@@ -82,8 +82,8 @@ input:checked + .slider:before {
 .filter-container select {
     padding: 10px;
     border-radius: 10px;
-    border: 1px solid #f5c518;
-    background-color: #3a3a3a;
+    border: 2px solid #f5c518;
+    background-color: #5a016e;
     color: #fff;
     font-size: 16px;
     outline: none;
@@ -92,8 +92,8 @@ input:checked + .slider:before {
 
 /* Dropdown option styles */
 .filter-container option {
-    background-color: #3a3a3a;
-    color: #fff;
+    background-color: rgb(131, 1, 159);
+    color: #ffffff;
 }
 
 /* Filter inputs (min vote, rating) */
@@ -113,9 +113,9 @@ input:checked + .slider:before {
     padding: 5px;
     font-size: 14px;
     width: 80px;
-    background-color: #3a3a3a;
-    border: 1px solid #f5c518;
-    border-radius: 5px;
+    background-color: #5a016e;
+    border: 2px solid #f5c518;
+    border-radius: 8px;
     color: #ffffff;
     outline: none;
 }
@@ -187,3 +187,48 @@ input:checked + .slider:before {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+/* Range slider container */
+.range-slider-container {
+    width: 100%;
+    max-width: 500px;
+    margin: 30px 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Range slider track */
+.range-slider-track {
+    width: 100%;
+    height: 6px;
+    background-color: rgba(100, 0, 128, 0.57);
+    border-radius: 3px;
+    position: relative;
+}
+
+/* Range slider thumb */
+.range-slider-thumb {
+    height: 20px;
+    width: 20px;
+    background-color: #5a016e;
+    border-radius: 50%;
+    position: absolute;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.range-slider-thumb:hover {
+    background-color: #e6b70c;
+    transition: ease-in 0.2s;
+    box-shadow: 0 0 6px 2px #e6b70c;
+
+}
+
+/* Range slider values */
+.range-slider-values {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin-top: 10px;
+    color: #ffffff;
+}

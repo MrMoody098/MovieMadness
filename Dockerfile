@@ -11,7 +11,7 @@ COPY package*.json ./
 RUN npm install
 
 # Copy the rest of the application code to the working directory
-COPY . .
+COPY movie-man-view .
 
 # Expose the port the app will run on
 EXPOSE 3000

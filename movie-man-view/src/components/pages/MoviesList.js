@@ -49,23 +49,19 @@ const MoviesList = () => {
         fetchRecentlyWatchedMovies(); // Update recently watched movies
     };
 
-    useEffect(() => {
-        const carousel = carouselRef.current;
-        const handleScroll = (event) => {
-            if (event.deltaY !== 0) {
-                event.preventDefault();
-                carousel.scrollLeft += event.deltaY;
-            }
-        };
-        carousel.addEventListener('wheel', handleScroll);
-        return () => {
-            carousel.removeEventListener('wheel', handleScroll);
-        };
-    }, []);
+    const renderStars = (rating) => {
+        const stars = [];
+        for (let i = 1; i <= 5; i++) {
+            stars.push(
+                <span key={i} className={`star ${i <= rating ? 'filled' : ''}`}>&#9733;</span>
+            );
+        }
+        return stars;
+    };
 
     return (
         <div>
-            <NavBar isModalOpen={isModalOpen} onSearch={setSearchQuery} />
+            <NavBar isModalOpen={isModalOpen} onSearch={setSearchQuery}/>
             <div className="recently-watched">
                 <h2>Recently Watched</h2>
                 <div className="carousel" ref={carouselRef}>
@@ -73,11 +69,16 @@ const MoviesList = () => {
                         <div className="movie-card" key={movie.id}>
                             <button className="delete-button" onClick={() => handleDeleteMovie(movie.id)}>X</button>
                             <div className="movie-poster" onClick={() => handleMovieSelect(movie)}>
-                                <img src={`https://image.tmdb.org/t/p/w500/${movie.poster_path}`} alt={movie.title} />
+                                <img src={`https://image.tmdb.org/t/p/w500/${movie.poster_path}`} alt={movie.title}/>
                             </div>
                             <div className="movie-details">
-                                <h2>{movie.title}</h2>
-                                <p>Rating: {movie.vote_average || 'N/A'}</p>
+                                <div className="movie-title"><h2>{movie.title}</h2></div>
+                                <div className="movie-rating">
+                                    <p>Rating: {movie.vote_average ? movie.vote_average.toFixed(1) : 'N/A'}</p>
+                                    <div className="star-rating">
+                                        {renderStars(Math.round(movie.vote_average / 2))}
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     ))}
@@ -88,11 +89,16 @@ const MoviesList = () => {
                 {movies.map((movie) => (
                     <div className="movie-card" key={movie.id} onClick={() => handleMovieSelect(movie)}>
                         <div className="movie-poster">
-                            <img src={movie.poster} alt={movie.title} />
+                            <img src={movie.poster} alt={movie.title}/>
                         </div>
                         <div className="movie-details">
-                            <h2>{movie.title}</h2>
-                            <p>Rating: {movie.vote_average || 'N/A'}</p>
+                            <div className="movie-title"><h2>{movie.title}</h2></div>
+                            <div className="movie-rating">
+                                <p>Rating: {movie.vote_average ? movie.vote_average.toFixed(1) : 'N/A'}</p>
+                                <div className="star-rating">
+                                    {renderStars(Math.round(movie.vote_average / 2))}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 ))}
@@ -101,7 +107,7 @@ const MoviesList = () => {
 
                 <Modal isOpen={isModalOpen} onRequestClose={closeModal} contentLabel="Movie Details">
                     <button onClick={closeModal}>Close</button>
-                    {selectedMovie && <MovieModal movie={selectedMovie} onMovieSelect={handleMovieSelect} />}
+                    {selectedMovie && <MovieModal movie={selectedMovie} onMovieSelect={handleMovieSelect}/>}
                 </Modal>
             </div>
 
@@ -111,4 +117,3 @@ const MoviesList = () => {
 };
 
 export default MoviesList;
-

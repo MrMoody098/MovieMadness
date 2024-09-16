@@ -83,6 +83,32 @@ const TvModal = ({ isOpen, onRequestClose, tvShow, onTvShowSelect }) => {
         }
     }, [autoSkip]);
 
+    useEffect(() => {
+        const handleKeyDown = (event) => {
+            switch (event.key) {
+                case '[':
+                    handlePrevEpisode();
+                    break;
+                case ']':
+                    handleNextEpisode();
+                    break;
+                case '-':
+                    handlePrevSeason();
+                    break;
+                case '=':
+                    handleNextSeason();
+                    break;
+                default:
+                    break;
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [episodeNumber, seasonNumber]);
+
     const handleTvShowSelect = (selectedShow) => {
         onTvShowSelect(selectedShow);
         topRef.current.scrollIntoView({ behavior: 'smooth' });

@@ -1,12 +1,16 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
+import { Range } from 'react-range';
 import "../css/Filter.css";
 import NavBar from "../NavBar";
 import Modal from 'react-modal';
 import MovieModal from "../modals/MovieModal";
 import TvModal from "../modals/TvModal";
 import "../css/Modal.css";
+
 const TMDB_API_KEY = 'f58bf4f31de2a8346b5841b863457b1f'; // Your API key
+const MIN_LENGTH = 0;
+const MAX_LENGTH = 300;
 
 const Filter = () => {
     const [genres, setGenres] = useState([]);
@@ -23,6 +27,7 @@ const Filter = () => {
     const [minVoteCount, setMinVoteCount] = useState(200); // Minimum vote count
     const [minRating, setMinRating] = useState(0); // Minimum rating
     const [maxRating, setMaxRating] = useState(10); // Maximum rating
+    const [lengthRange, setLengthRange] = useState([MIN_LENGTH, MAX_LENGTH]); // Length range
     const loaderRef = useRef(null);
 
     useEffect(() => {
@@ -58,8 +63,9 @@ const Filter = () => {
         setLoading(true);
         try {
             const genreFilter = genreId ? `&with_genres=${genreId}` : '';
+            const lengthFilter = `&with_runtime.gte=${lengthRange[0]}&with_runtime.lte=${lengthRange[1]}`;
             const endpoint = isMovieMode
-                ? `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&sort_by=vote_average.desc&page=${page}&vote_count.gte=${minVoteCount}&vote_average.gte=${minRating}&vote_average.lte=${maxRating}&with_original_language=${selectedLanguage}${genreFilter}`
+                ? `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&sort_by=vote_average.desc&page=${page}&vote_count.gte=${minVoteCount}&vote_average.gte=${minRating}&vote_average.lte=${maxRating}&with_original_language=${selectedLanguage}${genreFilter}${lengthFilter}`
                 : `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&sort_by=vote_average.desc&page=${page}&vote_count.gte=${minVoteCount}&vote_average.gte=${minRating}&vote_average.lte=${maxRating}&with_original_language=${selectedLanguage}${genreFilter}`;
 
             const { data } = await axios.get(endpoint);
@@ -85,7 +91,7 @@ const Filter = () => {
         setPage(1);
         setHasMore(true);
         fetchItemsByGenre(selectedGenre, 1);
-    }, [selectedGenre, isMovieMode, minVoteCount, minRating, maxRating, selectedLanguage]);
+    }, [selectedGenre, isMovieMode, minVoteCount, minRating, maxRating, selectedLanguage, lengthRange]);
 
     useEffect(() => {
         if (page > 1) {
@@ -132,7 +138,7 @@ const Filter = () => {
 
     return (
         <div className="filter-container">
-            <NavBar isModalOpen={isModalOpen}  />
+            <NavBar isModalOpen={isModalOpen}   />
 
             <div className="filter-header">
                 <h2>Filter by Genre</h2>
@@ -193,6 +199,37 @@ const Filter = () => {
                             min="0"
                             max="10"
                         />
+                    </label>
+                    <label>
+                        Length Range:
+                        <div className="range-slider-container">
+                            <Range
+                                step={1}
+                                min={MIN_LENGTH}
+                                max={MAX_LENGTH}
+                                values={lengthRange}
+                                onChange={(values) => setLengthRange(values)}
+                                renderTrack={({ props, children }) => (
+                                    <div
+                                        {...props}
+                                        className="range-slider-track"
+                                    >
+                                        {children}
+                                    </div>
+                                )}
+                                renderThumb={({ props }) => (
+                                    <div
+                                        {...props}
+                                        className="range-slider-thumb"
+                                    />
+                                )}
+                            />
+                            <div className="range-slider-values">
+                                <span>{lengthRange[0]}</span>
+                                <span>-</span>
+                                <span>{lengthRange[1]} mins</span>
+                            </div>
+                        </div>
                     </label>
                 </div>
             </div>

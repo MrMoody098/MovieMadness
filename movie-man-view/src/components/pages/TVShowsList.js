@@ -50,19 +50,15 @@ const TVShowsList = () => {
         fetchRecentlyWatchedTvShows(); // Update recently watched TV shows
     };
 
-    useEffect(() => {
-        const carouselTv = carouselTvRef.current;
-        const handleScroll = (event) => {
-            if (event.deltaY !== 0) {
-                event.preventDefault();
-                carouselTv.scrollLeft += event.deltaY;
-            }
-        };
-        carouselTv.addEventListener('wheel', handleScroll);
-        return () => {
-            carouselTv.removeEventListener('wheel', handleScroll);
-        };
-    }, []);
+    const renderStars = (rating) => {
+        const stars = [];
+        for (let i = 1; i <= 5; i++) {
+            stars.push(
+                <span key={i} className={`star ${i <= rating ? 'filled' : ''}`}>&#9733;</span>
+            );
+        }
+        return stars;
+    };
 
     return (
         <div>
@@ -77,8 +73,13 @@ const TVShowsList = () => {
                                 <img src={`https://image.tmdb.org/t/p/w500/${tvShow.poster_path}`} alt={tvShow.name} />
                             </div>
                             <div className="movie-details">
-                                <h2>{tvShow.name}</h2>
-                                <p>Rating: {tvShow.vote_average || 'N/A'}</p>
+                                <div className="movie-title"><h2>{tvShow.name}</h2></div>
+                                <div className="movie-rating">
+                                    <p>Rating: {tvShow.vote_average ? tvShow.vote_average.toFixed(1) : 'N/A'}</p>
+                                    <div className="star-rating">
+                                        {renderStars(Math.round(tvShow.vote_average / 2))}
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     ))}
@@ -92,8 +93,13 @@ const TVShowsList = () => {
                             <img src={tvShow.poster} alt={tvShow.name} />
                         </div>
                         <div className="movie-details">
-                            <h2>{tvShow.name}</h2>
-                            <p>Rating: {tvShow.vote_average || 'N/A'}</p>
+                            <div className="movie-title"><h2>{tvShow.name}</h2></div>
+                            <div className="movie-rating">
+                                <p>Rating: {tvShow.vote_average ? tvShow.vote_average.toFixed(1) : 'N/A'}</p>
+                                <div className="star-rating">
+                                    {renderStars(Math.round(tvShow.vote_average / 2))}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 ))}
