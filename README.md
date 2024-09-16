@@ -26,7 +26,7 @@ MovieMan is a React application that allows users to browse trending movies and 
 - An IDE to run the application from i reccomend Intellij Community Edition https://www.jetbrains.com/idea/ or Visual Studio (https://visualstudio.microsoft.com/)
   
 (Optional but reccomended)
--https://chromewebstore.google.com/detail/ublock-origin/cjpalhdlnbpafiamejdnhcphjbkeiagm
+-uBlock(https://chromewebstore.google.com/detail/ublock-origin/cjpalhdlnbpafiamejdnhcphjbkeiagm)
 
 
 ### Installation
