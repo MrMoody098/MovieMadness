@@ -52,6 +52,26 @@ const MovieModal = ({ movie, onMovieSelect }) => {
         topRef.current.scrollIntoView({ behavior: 'smooth' });
     };
 
+    useEffect(() => {
+        const handleMessage = (event) => {
+            if (event.origin !== 'https://vidsrc.xyz') return;
+            const data = event.data;
+            if (data.event === 'timeupdate') {
+                console.log(`Current time: ${data.currentTime}`);
+            }
+        };
+
+        window.addEventListener('message', handleMessage);
+
+        return () => {
+            window.removeEventListener('message', handleMessage);
+        };
+    }, []);
+
+    const requestCurrentTime = () => {
+        iframeRef.current.contentWindow.postMessage({ event: 'getCurrentTime' }, '*');
+    };
+
     if (!movie) {
         return <div>Loading...</div>; // Or any other loading indicator
     }
@@ -77,6 +97,7 @@ const MovieModal = ({ movie, onMovieSelect }) => {
                             height: '100%'
                         }}
                         ref={iframeRef}
+                        onLoad={requestCurrentTime}
                     />
                 </div>
             </div>

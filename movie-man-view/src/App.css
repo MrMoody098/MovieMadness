@@ -33,7 +33,7 @@ body {
 
 .navbar {
     position: fixed;
-    top: 2px;
+    top: 0px;
     left: 0;
     right: 0;
     margin: 0 auto;
