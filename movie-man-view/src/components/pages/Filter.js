@@ -252,7 +252,7 @@ const Filter = () => {
 
                         <div className="movie-details">
                             <h2>{item.title || item.name}</h2>
-                            <p>Rating: {item.vote_average || 'N/A'}</p>
+                            <p>Rating: {Math.round(item.vote_average) || 'N/A'}</p>
                         </div>
                     </div>
                 ))}
