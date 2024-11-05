@@ -99,6 +99,9 @@ const TVShowsList = () => {
         setIsDragging(false);
     };
 
+    const selectAll = () => {
+        recentlyWatchedTv.map(show=> setSelectedForDeletion(prev => [...prev, show.id]));
+    };
     return (
         <div>
             <NavBar isModalOpen={isModalOpen} onSearch={setSearchQuery} />
@@ -107,10 +110,14 @@ const TVShowsList = () => {
                 <button className="delete-mode-button" onClick={() => setDeleteMode(!deleteMode)}>
                     {deleteMode ? 'Cancel' : 'Delete TV Shows'}
                 </button>
-                {deleteMode && (
+                {deleteMode && (<>
+                    <button className="select-all-button" onClick={selectAll}>
+                        Select All
+                    </button>
                     <button className="confirm-delete-button" onClick={handleDeleteSelected}>
                         Confirm Delete
                     </button>
+                    </>
                 )}
                 <div
                     className="carousel"
