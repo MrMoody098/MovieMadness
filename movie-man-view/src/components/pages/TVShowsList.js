@@ -22,7 +22,13 @@ const TVShowsList = () => {
     } = useFetchItems('tv');
 
     const [recentlyWatchedTv, setRecentlyWatchedTv] = useState([]);
+    const [deleteMode, setDeleteMode] = useState(false);
+    const [selectedForDeletion, setSelectedForDeletion] = useState([]);
+    const [animateCard, setAnimateCard] = useState(null);
     const carouselTvRef = useRef(null);
+    const [isDragging, setIsDragging] = useState(false);
+    const [startX, setStartX] = useState(0);
+    const [scrollLeft, setScrollLeft] = useState(0);
 
     const fetchRecentlyWatchedTvShows = async () => {
         const tvShowIds = getTvShowIds();
@@ -38,16 +44,31 @@ const TVShowsList = () => {
     }, []);
 
     const handleTvShowSelect = (tvShow) => {
-        addTvShowId(tvShow.id);
-        handleItemClick(tvShow);
+        if (deleteMode) {
+            setAnimateCard(tvShow.id);
+            setTimeout(() => setAnimateCard(null), 500); // Reset animation after 500ms
+            setSelectedForDeletion(prev =>
+                prev.includes(tvShow.id) ? prev.filter(id => id !== tvShow.id) : [...prev, tvShow.id]
+            );
+        } else {
+            addTvShowId(tvShow.id);
+            handleItemClick(tvShow);
+            fetchRecentlyWatchedTvShows(); // Update recently watched TV shows
+        }
+    };
+
+    const handleDeleteSelected = () => {
+        let tvShowIds = getTvShowIds();
+        tvShowIds = tvShowIds.filter(id => !selectedForDeletion.includes(id));
+        localStorage.setItem('recentlyWatchedTv', JSON.stringify(tvShowIds));
+        setSelectedForDeletion([]);
+        setDeleteMode(false);
         fetchRecentlyWatchedTvShows(); // Update recently watched TV shows
     };
 
-    const handleDeleteTvShow = (tvShowId) => {
-        let tvShowIds = getTvShowIds();
-        tvShowIds = tvShowIds.filter(id => id !== tvShowId);
-        localStorage.setItem('recentlyWatchedTv', JSON.stringify(tvShowIds));
-        fetchRecentlyWatchedTvShows(); // Update recently watched TV shows
+    const handleCancelDeleteMode = () => {
+        setSelectedForDeletion([]);
+        setDeleteMode(false);
     };
 
     const renderStars = (rating) => {
@@ -60,16 +81,52 @@ const TVShowsList = () => {
         return stars;
     };
 
+    const startDrag = (e) => {
+        setIsDragging(true);
+        setStartX(e.pageX - carouselTvRef.current.offsetLeft);
+        setScrollLeft(carouselTvRef.current.scrollLeft);
+    };
+
+    const onDrag = (e) => {
+        if (!isDragging) return;
+        e.preventDefault();
+        const x = e.pageX - carouselTvRef.current.offsetLeft;
+        const walk = (x - startX) * 4; //scroll speed multiplier
+        carouselTvRef.current.scrollLeft = scrollLeft - walk;
+    };
+
+    const endDrag = () => {
+        setIsDragging(false);
+    };
+
     return (
         <div>
             <NavBar isModalOpen={isModalOpen} onSearch={setSearchQuery} />
             <div className="recently-watched">
                 <h2>Recently Watched TV Shows</h2>
-                <div className="carousel" ref={carouselTvRef}>
+                <button className="delete-mode-button" onClick={() => setDeleteMode(!deleteMode)}>
+                    {deleteMode ? 'Cancel' : 'Delete TV Shows'}
+                </button>
+                {deleteMode && (
+                    <button className="confirm-delete-button" onClick={handleDeleteSelected}>
+                        Confirm Delete
+                    </button>
+                )}
+                <div
+                    className="carousel"
+                    ref={carouselTvRef}
+                    onMouseDown={startDrag}
+                    onMouseMove={onDrag}
+                    onMouseUp={endDrag}
+                    onMouseLeave={endDrag}
+                >
                     {recentlyWatchedTv.map((tvShow) => (
-                        <div className="movie-card" key={tvShow.id}>
-                            <button className="delete-button" onClick={() => handleDeleteTvShow(tvShow.id)}>X</button>
-                            <div className="movie-poster" onClick={() => handleTvShowSelect(tvShow)}>
+                        <div
+                            className={`movie-card ${deleteMode ? 'delete-mode' : ''} ${selectedForDeletion.includes(tvShow.id) ? 'selected' : ''} ${animateCard === tvShow.id ? 'animate' : ''}`}
+                            key={tvShow.id}
+                            onClick={() => handleTvShowSelect(tvShow)}
+                        >
+                            <div className="movie-poster">
                                 <img src={`https://image.tmdb.org/t/p/w500/${tvShow.poster_path}`} alt={tvShow.name} />
                             </div>
                             <div className="movie-details">
@@ -118,4 +175,3 @@ const TVShowsList = () => {
 };
 
 export default TVShowsList;
-

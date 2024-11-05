@@ -65,6 +65,11 @@ const MoviesList = () => {
         fetchRecentlyWatchedMovies(); // Update recently watched movies
     };
 
+    const handleCancelDeleteMode = () => {
+        setSelectedForDeletion([]);
+        setDeleteMode(false);
+    };
+
     const renderStars = (rating) => {
         const stars = [];
         for (let i = 1; i <= 5; i++) {
@@ -85,7 +90,7 @@ const MoviesList = () => {
         if (!isDragging) return;
         e.preventDefault();
         const x = e.pageX - carouselRef.current.offsetLeft;
-        const walk = (x - startX) * 4; //scroll speed multiplier
+        const walk = (x - startX) * 3; //scroll speed multiplier
         carouselRef.current.scrollLeft = scrollLeft - walk;
     };
 
@@ -93,6 +98,9 @@ const MoviesList = () => {
         setIsDragging(false);
     };
 
+    const selectAll = () => {
+        recentlyWatched.map(movie=> setSelectedForDeletion(prev => [...prev, movie.id]));
+    };
     return (
         <div>
             <NavBar isModalOpen={isModalOpen} onSearch={setSearchQuery}/>
@@ -101,11 +109,15 @@ const MoviesList = () => {
                 <button className="delete-mode-button" onClick={() => setDeleteMode(!deleteMode)}>
                     {deleteMode ? 'Cancel' : 'Delete Movies'}
                 </button>
-                {deleteMode && (
+                {deleteMode && (<>
                     <button className="confirm-delete-button" onClick={handleDeleteSelected}>
                         Confirm Delete
                     </button>
-                )}
+                    <button className="select-all-button" onClick={selectAll}>
+                        Select All
+                    </button>
+                </>
+)}
                 <div
                     className="carousel"
                     ref={carouselRef}
@@ -136,7 +148,7 @@ const MoviesList = () => {
                     ))}
                 </div>
             </div>
-            <div className="movie-title"><h2>Movies</h2></div>
+            <div className="movie-title"><h2>Trending Movies</h2></div>
             <div className="movies-container">
                 {movies.map((movie) => (
                     <div className="movie-card" key={movie.id} onClick={() => handleMovieSelect(movie)}>
