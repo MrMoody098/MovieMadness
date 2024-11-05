@@ -95,17 +95,65 @@
     margin: 20px 0;
 }
 
+@keyframes bounce {
+    0%, 100% {
+        transform: translateY(0);
+        box-shadow: 0 0 10px rgba(100, 0, 128, 0.57);
+        background-color: rgba(100, 0, 128, 0.13);
+    }
+    50% {
+        transform: translateY(-10px);
+        box-shadow: 0 0 20px rgb(69, 13, 87);
+        background-color: rgb(39, 27, 47);
+    }
+}
+
+.movie-card.animate {
+    animation: forwards 0.5s ease;
+}
+
 .carousel {
     padding: 20px;
-
+    border-radius: 60px;
+    margin-left: 35px;
+    margin-right: 35px;
     display: flex;
     overflow-x: auto;
     overflow-y: hidden; /* Hide vertical scrollbar */
     gap: 10px;
     position: relative; /* Ensure it captures scroll events */
     z-index: 10;
+    background-color: rgba(237, 235, 235, 0.11); /* Grey translucent background */
 }
 
+.delete-mode-button, .confirm-delete-button {
+    background-color: #333;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    margin: 10px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.movie-card.delete-mode {
+    cursor: pointer;
+    transition: transform 0.2s, background-color 0.2s;
+}
+
+.movie-card.delete-mode:hover {
+    transform: scale(1.05);
+    background-color: rgba(253, 3, 54, 0.42); /* Slightly darker background */
+}
+
+.movie-card.selected {
+    background-color: rgb(39, 27, 47); /* Highlight selected cards */
+    opacity: 50%;
+}
+
+.movie-card.selected:hover {
+    background-color: rgb(39, 27, 47); /* Brighter red on hover */
+}
 .carousel::-webkit-scrollbar {
     display: none; /* Hide scrollbar for WebKit browsers */
 }
@@ -185,4 +233,13 @@
 
 .star.filled {
     color: #f5c518;
+}
+.select-all-button,.delete-mode-button, .confirm-delete-button, .cancel-delete-button {
+    background-color: #333;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    margin: 10px;
+    cursor: pointer;
+    border-radius: 5px;
 }

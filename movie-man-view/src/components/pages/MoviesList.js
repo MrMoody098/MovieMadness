@@ -21,7 +21,13 @@ const MoviesList = () => {
     } = useFetchItems('movie');
 
     const [recentlyWatched, setRecentlyWatched] = useState([]);
+    const [deleteMode, setDeleteMode] = useState(false);
+    const [selectedForDeletion, setSelectedForDeletion] = useState([]);
+    const [animateCard, setAnimateCard] = useState(null);
     const carouselRef = useRef(null);
+    const [isDragging, setIsDragging] = useState(false);
+    const [startX, setStartX] = useState(0);
+    const [scrollLeft, setScrollLeft] = useState(0);
 
     const fetchRecentlyWatchedMovies = async () => {
         const movieIds = getMovieIds();
@@ -37,16 +43,31 @@ const MoviesList = () => {
     }, []);
 
     const handleMovieSelect = (movie) => {
-        addMovieId(movie.id);
-        handleItemClick(movie);
+        if (deleteMode) {
+            setAnimateCard(movie.id);
+            setTimeout(() => setAnimateCard(null), 500); // Reset animation after 500ms
+            setSelectedForDeletion(prev =>
+                prev.includes(movie.id) ? prev.filter(id => id !== movie.id) : [...prev, movie.id]
+            );
+        } else {
+            addMovieId(movie.id);
+            handleItemClick(movie);
+            fetchRecentlyWatchedMovies(); // Update recently watched movies
+        }
+    };
+
+    const handleDeleteSelected = () => {
+        let movieIds = getMovieIds();
+        movieIds = movieIds.filter(id => !selectedForDeletion.includes(id));
+        localStorage.setItem('recentlyWatched', JSON.stringify(movieIds));
+        setSelectedForDeletion([]);
+        setDeleteMode(false);
         fetchRecentlyWatchedMovies(); // Update recently watched movies
     };
 
-    const handleDeleteMovie = (movieId) => {
-        let movieIds = getMovieIds();
-        movieIds = movieIds.filter(id => id !== movieId);
-        localStorage.setItem('recentlyWatched', JSON.stringify(movieIds));
-        fetchRecentlyWatchedMovies(); // Update recently watched movies
+    const handleCancelDeleteMode = () => {
+        setSelectedForDeletion([]);
+        setDeleteMode(false);
     };
 
     const renderStars = (rating) => {
@@ -59,16 +80,59 @@ const MoviesList = () => {
         return stars;
     };
 
+    const startDrag = (e) => {
+        setIsDragging(true);
+        setStartX(e.pageX - carouselRef.current.offsetLeft);
+        setScrollLeft(carouselRef.current.scrollLeft);
+    };
+
+    const onDrag = (e) => {
+        if (!isDragging) return;
+        e.preventDefault();
+        const x = e.pageX - carouselRef.current.offsetLeft;
+        const walk = (x - startX) * 3; //scroll speed multiplier
+        carouselRef.current.scrollLeft = scrollLeft - walk;
+    };
+
+    const endDrag = () => {
+        setIsDragging(false);
+    };
+
+    const selectAll = () => {
+        recentlyWatched.map(movie=> setSelectedForDeletion(prev => [...prev, movie.id]));
+    };
     return (
         <div>
             <NavBar isModalOpen={isModalOpen} onSearch={setSearchQuery}/>
             <div className="recently-watched">
                 <h2>Recently Watched</h2>
-                <div className="carousel" ref={carouselRef}>
+                <button className="delete-mode-button" onClick={() => setDeleteMode(!deleteMode)}>
+                    {deleteMode ? 'Cancel' : 'Delete Movies'}
+                </button>
+                {deleteMode && (<>
+                    <button className="confirm-delete-button" onClick={handleDeleteSelected}>
+                        Confirm Delete
+                    </button>
+                    <button className="select-all-button" onClick={selectAll}>
+                        Select All
+                    </button>
+                </>
+)}
+                <div
+                    className="carousel"
+                    ref={carouselRef}
+                    onMouseDown={startDrag}
+                    onMouseMove={onDrag}
+                    onMouseUp={endDrag}
+                    onMouseLeave={endDrag}
+                >
                     {recentlyWatched.map((movie) => (
-                        <div className="movie-card" key={movie.id}>
-                            <button className="delete-button" onClick={() => handleDeleteMovie(movie.id)}>X</button>
-                            <div className="movie-poster" onClick={() => handleMovieSelect(movie)}>
+                        <div
+                            className={`movie-card ${deleteMode ? 'delete-mode' : ''} ${selectedForDeletion.includes(movie.id) ? 'selected' : ''} ${animateCard === movie.id ? 'animate' : ''}`}
+                            key={movie.id}
+                            onClick={() => handleMovieSelect(movie)}
+                        >
+                            <div className="movie-poster">
                                 <img src={`https://image.tmdb.org/t/p/w500/${movie.poster_path}`} alt={movie.title}/>
                             </div>
                             <div className="movie-details">
@@ -84,7 +148,7 @@ const MoviesList = () => {
                     ))}
                 </div>
             </div>
-            <div className="movie-title"><h2>Movies</h2></div>
+            <div className="movie-title"><h2>Trending Movies</h2></div>
             <div className="movies-container">
                 {movies.map((movie) => (
                     <div className="movie-card" key={movie.id} onClick={() => handleMovieSelect(movie)}>
