@@ -100,13 +100,19 @@ const TVShowsList = () => {
     };
 
     const selectAll = () => {
-        recentlyWatchedTv.map(show=> setSelectedForDeletion(prev => [...prev, show.id]));
+        if (selectedForDeletion.length === recentlyWatchedTv.length) {
+            setSelectedForDeletion([]);
+        } else {
+            setSelectedForDeletion(recentlyWatchedTv.map(show => show.id));
+        }
     };
     return (
         <div>
             <NavBar isModalOpen={isModalOpen} onSearch={setSearchQuery} />
+            {recentlyWatchedTv.length > 0 && <>
             <div className="recently-watched">
                 <h2>Recently Watched TV Shows</h2>
+
                 <button className="delete-mode-button" onClick={() => setDeleteMode(!deleteMode)}>
                     {deleteMode ? 'Cancel' : 'Delete TV Shows'}
                 </button>
@@ -149,6 +155,10 @@ const TVShowsList = () => {
                     ))}
                 </div>
             </div>
+            </>
+            }
+
+
             <div className="movie-title"><h2>TV Shows</h2></div>
             <div className="movies-container">
                 {tvShows.map((tvShow) => (
