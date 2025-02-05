@@ -2,8 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 
-const TMDB_API_KEY = 'f58bf4f31de2a8346b5841b863457b1f'; // Your API key
-
+const TMDB_API_KEY = process.env.REACT_APP_TMDB_API_KEY;
 const useFetchItems = (type) => {
     const [items, setItems] = useState([]);
     const [selectedItem, setSelectedItem] = useState(null);

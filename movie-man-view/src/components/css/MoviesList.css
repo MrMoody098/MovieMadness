@@ -113,6 +113,7 @@
 }
 
 .carousel {
+    /*box-shadow: 0 0 10px #170217, 0 0 20px #671367, 0 0 30px #ff00ff; !* Glow effect *!*/
     padding: 20px;
     border-radius: 60px;
     margin-left: 35px;
@@ -131,9 +132,10 @@
     color: #fff;
     border: none;
     padding: 10px 20px;
-    margin: 10px;
+    margin: 30px;
     cursor: pointer;
     border-radius: 5px;
+
 }
 
 .movie-card.delete-mode {
