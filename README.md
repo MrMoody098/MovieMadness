@@ -1,4 +1,4 @@
-# MovieMan
+-# MovieMan
 
 MovieMan is a React application that allows users to browse trending movies and search for specific films using the TMDb (The Movie Database) API. The application features movie posters, details, and the ability to view embedded movie trailers.
 
