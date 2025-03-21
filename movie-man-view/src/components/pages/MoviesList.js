@@ -21,6 +21,7 @@ const MoviesList = () => {
     } = useFetchItems('movie');
 
     const [recentlyWatched, setRecentlyWatched] = useState([]);
+    const [recommendedMovies, setRecommendedMovies] = useState([]);
     const [deleteMode, setDeleteMode] = useState(false);
     const [selectedForDeletion, setSelectedForDeletion] = useState([]);
     const [animateCard, setAnimateCard] = useState(null);
@@ -36,6 +37,24 @@ const MoviesList = () => {
         );
         const movieDetails = await Promise.all(movieDetailsPromises);
         setRecentlyWatched(movieDetails.map(response => response.data));
+
+        // Fetch recommendations based on recently watched movies
+        try {
+            const response = await axios.post('http://localhost:8000/recommend', {
+                watched_movie_indices: movieIds,
+                top_k: 10
+            });
+            const recommendedIds = response.data.recommended_movie_ids;
+            const recommendedDetails = await Promise.all(
+                recommendedIds.map(async (id) => {
+                    const { data } = await axios.get(`https://api.themoviedb.org/3/movie/${id}?api_key=${API_KEY}`);
+                    return data;
+                })
+            );
+            setRecommendedMovies(recommendedDetails);
+        } catch (error) {
+            console.error('Error fetching recommendations:', error);
+        }
     };
 
     useEffect(() => {
@@ -52,7 +71,7 @@ const MoviesList = () => {
         } else {
             addMovieId(movie.id);
             handleItemClick(movie);
-            fetchRecentlyWatchedMovies(); // Update recently watched movies
+            fetchRecentlyWatchedMovies(); // Update recently watched movies and recommendations
         }
     };
 
@@ -62,7 +81,7 @@ const MoviesList = () => {
         localStorage.setItem('recentlyWatched', JSON.stringify(movieIds));
         setSelectedForDeletion([]);
         setDeleteMode(false);
-        fetchRecentlyWatchedMovies(); // Update recently watched movies
+        fetchRecentlyWatchedMovies(); // Update recently watched movies and recommendations
     };
 
     const handleCancelDeleteMode = () => {
@@ -101,53 +120,81 @@ const MoviesList = () => {
     const selectAll = () => {
         recentlyWatched.map(movie=> setSelectedForDeletion(prev => [...prev, movie.id]));
     };
+
     return (
         <div>
             <NavBar isModalOpen={isModalOpen} onSearch={setSearchQuery}/>
-            <div className="recently-watched">
-                <h2>Recently Watched</h2>
-                <button className="delete-mode-button" onClick={() => setDeleteMode(!deleteMode)}>
-                    {deleteMode ? 'Cancel' : 'Delete Movies'}
-                </button>
-                {deleteMode && (<>
-                    <button className="confirm-delete-button" onClick={handleDeleteSelected}>
-                        Confirm Delete
+            {recentlyWatched.length > 0 && (
+                <div className="recently-watched">
+                    <h2>Recently Watched</h2>
+                    <button className="delete-mode-button" onClick={() => setDeleteMode(!deleteMode)}>
+                        {deleteMode ? 'Cancel' : 'Delete Movies'}
                     </button>
-                    <button className="select-all-button" onClick={selectAll}>
-                        Select All
-                    </button>
-                </>
-)}
-                <div
-                    className="carousel"
-                    ref={carouselRef}
-                    onMouseDown={startDrag}
-                    onMouseMove={onDrag}
-                    onMouseUp={endDrag}
-                    onMouseLeave={endDrag}
-                >
-                    {recentlyWatched.map((movie) => (
-                        <div
-                            className={`movie-card ${deleteMode ? 'delete-mode' : ''} ${selectedForDeletion.includes(movie.id) ? 'selected' : ''} ${animateCard === movie.id ? 'animate' : ''}`}
-                            key={movie.id}
-                            onClick={() => handleMovieSelect(movie)}
-                        >
-                            <div className="movie-poster">
-                                <img src={`https://image.tmdb.org/t/p/w500/${movie.poster_path}`} alt={movie.title}/>
-                            </div>
-                            <div className="movie-details">
-                                <div className="movie-title"><h2>{movie.title}</h2></div>
-                                <div className="movie-rating">
-                                    <p>Rating: {movie.vote_average ? movie.vote_average.toFixed(1) : 'N/A'}</p>
-                                    <div className="star-rating">
-                                        {renderStars(Math.round(movie.vote_average / 2))}
+                    {deleteMode && (<>
+                        <button className="confirm-delete-button" onClick={handleDeleteSelected}>
+                            Confirm Delete
+                        </button>
+                        <button className="select-all-button" onClick={selectAll}>
+                            Select All
+                        </button>
+                    </>
+                    )}
+                    <div
+                        className="carousel"
+                        ref={carouselRef}
+                        onMouseDown={startDrag}
+                        onMouseMove={onDrag}
+                        onMouseUp={endDrag}
+                        onMouseLeave={endDrag}
+                    >
+                        {recentlyWatched.map((movie) => (
+                            <div
+                                className={`movie-card ${deleteMode ? 'delete-mode' : ''} ${selectedForDeletion.includes(movie.id) ? 'selected' : ''} ${animateCard === movie.id ? 'animate' : ''}`}
+                                key={movie.id}
+                                onClick={() => handleMovieSelect(movie)}
+                            >
+                                <div className="movie-poster">
+                                    <img src={`https://image.tmdb.org/t/p/w500/${movie.poster_path}`} alt={movie.title}/>
+                                </div>
+                                <div className="movie-details">
+                                    <div className="movie-title"><h2>{movie.title}</h2></div>
+                                    <div className="movie-rating">
+                                        <p>Rating: {movie.vote_average ? movie.vote_average.toFixed(1) : 'N/A'}</p>
+                                        <div className="star-rating">
+                                            {renderStars(Math.round(movie.vote_average / 2))}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    ))}
+                        ))}
+                    </div>
                 </div>
-            </div>
+            )}
+
+            {recommendedMovies.length > 0 && (
+                <div className="recently-watched">
+                    <h2>Recommended Movies</h2>
+                    <div className="carousel">
+                        {recommendedMovies.map((movie) => (
+                            <div className="movie-card" key={movie.id} onClick={() => handleMovieSelect(movie)}>
+                                <div className="movie-poster">
+                                    <img src={`https://image.tmdb.org/t/p/w500/${movie.poster_path}`} alt={movie.title}/>
+                                </div>
+                                <div className="movie-details">
+                                    <div className="movie-title"><h2>{movie.title}</h2></div>
+                                    <div className="movie-rating">
+                                        <p>Rating: {movie.vote_average ? movie.vote_average.toFixed(1) : 'N/A'}</p>
+                                        <div className="star-rating">
+                                            {renderStars(Math.round(movie.vote_average / 2))}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
             <div className="movie-title"><h2>Trending Movies</h2></div>
             <div className="movies-container">
                 {movies.map((movie) => (
