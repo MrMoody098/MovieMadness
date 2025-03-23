@@ -118,7 +118,11 @@ const MoviesList = () => {
     };
 
     const selectAll = () => {
-        recentlyWatched.map(movie=> setSelectedForDeletion(prev => [...prev, movie.id]));
+        if (selectedForDeletion.length === recentlyWatched.length) {
+            setSelectedForDeletion([]);
+        } else {
+            setSelectedForDeletion(recentlyWatched.map(show => show.id));
+        }
     };
 
     return (
