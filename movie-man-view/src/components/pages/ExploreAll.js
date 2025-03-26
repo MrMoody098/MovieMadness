@@ -55,28 +55,33 @@ const ExploreAll = () => {
         <div>
             <NavBar />
             <Carousel />
-            {/*<div className="recently-watched">*/}
-            {/*    <h2>All Recently Watched</h2>*/}
-            {/*    <div className="movies-container">*/}
-            {/*        {recentlyWatched.map((item) => (*/}
-            {/*            <div className="movie-card" key={item.id}>*/}
-            {/*                <button className="delete-button" onClick={() => handleDelete(item.id, item.type)}>X</button>*/}
-            {/*                <div className="movie-poster">*/}
-            {/*                    <img src={`https://image.tmdb.org/t/p/w500/${item.poster_path}`} alt={item.title || item.name} />*/}
-            {/*                </div>*/}
-            {/*                <div className="movie-details">*/}
-            {/*                    <h2>{item.title || item.name}</h2>*/}
-            {/*                    <p>Rating: {item.vote_average ? item.vote_average.toFixed(1) : 'N/A'}</p>*/}
-            {/*                </div>*/}
-            {/*            </div>*/}
-            {/*        ))}*/}
-            {/*    </div>*/}
-            {/*</div>*/}
-
-            <div className="action-movies">
-                <h2>Action Movies</h2>
-                <GenreCarousel genreName="action" />  // For Action genre
+            <div className="recently-watched">
+                <h2>All Recently Watched</h2>
+                <div className="movies-container">
+                    {recentlyWatched.map((item) => (
+                        <div className="movie-card" key={item.id}>
+                            <button className="delete-button" onClick={() => handleDelete(item.id, item.type)}>X</button>
+                            <div className="movie-poster">
+                                <img src={`https://image.tmdb.org/t/p/w500/${item.poster_path}`} alt={item.title || item.name} />
+                            </div>
+                            <div className="movie-details">
+                                <h2>{item.title || item.name}</h2>
+                                <p>Rating: {item.vote_average ? item.vote_average.toFixed(1) : 'N/A'}</p>
+                            </div>
+                        </div>
+                    ))}
+                </div>
             </div>
+            <div className="genre-carousel">
+                <div className="action-movies">
+                    <h2>Action Movies</h2>
+                    <GenreCarousel genreName="action" />  // For Action genre
+                </div>
+                <div className="comedy-movies">
+                    <h2>Comedy Movies</h2>
+                    <GenreCarousel genreName="comedy" />  // For Comedy genre
+                </div>
+             </div>
         </div>
     );
 };

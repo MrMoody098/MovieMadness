@@ -41,7 +41,7 @@
     text-align: center;
 }
 
-.action-movies h2{
+.genre-carousel h2{
     font-size: 24px;
     margin-bottom: 20px;
     color: #f5c518; /* Optional: Highlight color */
@@ -209,6 +209,10 @@
     display: none; /* Hide scrollbar for WebKit browsers */
 }
 
+.section-carousel::-webkit-scrollbar {
+    display: none; /* Hide scrollbar for WebKit browsers */
+}
+
 .carousel-tv .tv-card {
     flex: 0 0 auto;
     width: 150px;
@@ -271,4 +275,30 @@
     margin: 10px;
     cursor: pointer;
     border-radius: 5px;
+}
+
+
+@media (max-width: 768px) {
+    .movie-card {
+        width: 200px; /* Adjust the width for mobile devices */
+        padding: 20px; /* Adjust the padding for mobile devices */
+    }
+
+
+
+    .movie-title h2 {
+        font-size: 18px; /* Adjust the font size for mobile devices */
+    }
+
+    .movie-details h2 {
+        font-size: 1em; /* Adjust the font size for mobile devices */
+    }
+
+    .movie-rating {
+        font-size: 0.9em; /* Adjust the font size for mobile devices */
+    }
+
+    .star {
+        font-size: 1em; /* Adjust the star size for mobile devices */
+    }
 }

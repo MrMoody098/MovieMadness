@@ -6,6 +6,7 @@ import '../App.css';
 const NavBar = ({ onSearch, isModalOpen }) => {
   const [show, setShow] = useState(true);
   const [query, setQuery] = useState('');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   let lastScrollY = window.pageYOffset;
 
@@ -26,6 +27,10 @@ const NavBar = ({ onSearch, isModalOpen }) => {
 
   const handleSearch = () => {
     onSearch(query);
+  };
+
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
   };
 
   useEffect(() => {
@@ -54,7 +59,10 @@ const NavBar = ({ onSearch, isModalOpen }) => {
                 }
               }}
           />
-          <div className="nav-links">
+          <button className="mobile-menu-button" onClick={toggleMobileMenu}>
+            ☰
+          </button>
+          <div className={`nav-links ${isMobileMenuOpen ? 'open' : ''}`}>
             <Link to="/explore">Explore</Link>
             <Link to="/movies">Movies</Link>
             <Link to="/tv-shows">TV Shows</Link>

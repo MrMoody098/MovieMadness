@@ -10,132 +10,69 @@ const TvModal = ({ isOpen, onRequestClose, tvShow, onTvShowSelect }) => {
     const [episodeUrl, setEpisodeUrl] = useState('');
     const [seasonNumber, setSeasonNumber] = useState(1);
     const [episodeNumber, setEpisodeNumber] = useState(1);
-    const [autoSkip, setAutoSkip] = useState(false);
-    const [recommendedShows, setRecommendedShows] = useState([]);
-    const [similarShows, setSimilarShows] = useState([]);
+    const [totalSeasons, setTotalSeasons] = useState(1);
+    const [totalEpisodes, setTotalEpisodes] = useState(1);
     const topRef = useRef(null);
     const videoRef = useRef(null);
 
     useEffect(() => {
-        const fetchEpisodeUrl = async () => {
-            if (tvShow) {
-                const tmdbId = tvShow.id;
-                try {
-                    const episodeEmbedUrl = `https://vidsrc.xyz/embed/tv?tmdb=${tmdbId}&season=${seasonNumber}&episode=${episodeNumber}`;
-                    setEpisodeUrl(episodeEmbedUrl);
-                } catch (error) {
-                    console.error('Error fetching episode URL:', error);
-                }
-            }
-        };
-
-        fetchEpisodeUrl();
-    }, [tvShow, seasonNumber, episodeNumber]);
-
-    useEffect(() => {
-        const fetchRecommendedShows = async () => {
+        const fetchShowDetails = async () => {
             if (tvShow) {
                 try {
                     const { data } = await axios.get(
-                        `https://api.themoviedb.org/3/tv/${tvShow.id}/recommendations?api_key=${API_KEY}`
+                        `https://api.themoviedb.org/3/tv/${tvShow.id}?api_key=${API_KEY}`
                     );
-                    const filteredShows = data.results.filter(recShow => recShow.vote_count > 200);
-                    setRecommendedShows(filteredShows);
+                    setTotalSeasons(data.number_of_seasons);
+                    setSeasonNumber(1);
                 } catch (error) {
-                    console.error('Error fetching recommended shows:', error);
+                    console.error('Error fetching show details:', error);
                 }
             }
         };
-
-        fetchRecommendedShows();
+        fetchShowDetails();
     }, [tvShow]);
 
     useEffect(() => {
-        const fetchSimilarShows = async () => {
-            if (tvShow) {
+        const fetchSeasonDetails = async () => {
+            if (tvShow && seasonNumber > 0 && seasonNumber <= totalSeasons) {
                 try {
                     const { data } = await axios.get(
-                        `https://api.themoviedb.org/3/tv/${tvShow.id}/similar?api_key=${API_KEY}`
+                        `https://api.themoviedb.org/3/tv/${tvShow.id}/season/${seasonNumber}?api_key=${API_KEY}`
                     );
-                    const filteredShows = data.results.filter(simShow => simShow.vote_count > 200);
-                    setSimilarShows(filteredShows);
+                    setTotalEpisodes(data.episodes.length);
+                    setEpisodeNumber(1);
                 } catch (error) {
-                    console.error('Error fetching similar shows:', error);
+                    console.error('Error fetching season details:', error);
                 }
             }
         };
-
-        fetchSimilarShows();
-    }, [tvShow]);
+        fetchSeasonDetails();
+    }, [tvShow, seasonNumber]);
 
     useEffect(() => {
-        const videoElement = videoRef.current;
-        if (videoElement) {
-            const handleEnded = () => {
-                if (autoSkip) {
-                    setEpisodeNumber(prev => prev + 1);
-                }
-            };
-            videoElement.addEventListener('ended', handleEnded);
-            return () => {
-                videoElement.removeEventListener('ended', handleEnded);
-            };
+        if (tvShow && seasonNumber <= totalSeasons && episodeNumber <= totalEpisodes) {
+            const episodeEmbedUrl = `https://vidsrc.xyz/embed/tv?tmdb=${tvShow.id}&season=${seasonNumber}&episode=${episodeNumber}`;
+            setEpisodeUrl(episodeEmbedUrl);
+        } else {
+            setEpisodeUrl('');
         }
-    }, [autoSkip]);
+    }, [tvShow, seasonNumber, episodeNumber, totalSeasons, totalEpisodes]);
 
-    useEffect(() => {
-        const handleKeyDown = (event) => {
-            switch (event.key) {
-                case '[':
-                    handlePrevEpisode();
-                    break;
-                case ']':
-                    handleNextEpisode();
-                    break;
-                case '-':
-                    handlePrevSeason();
-                    break;
-                case '=':
-                    handleNextSeason();
-                    break;
-                default:
-                    break;
-            }
-        };
-
-        window.addEventListener('keydown', handleKeyDown);
-        return () => {
-            window.removeEventListener('keydown', handleKeyDown);
-        };
-    }, [episodeNumber, seasonNumber]);
-
-    const handleTvShowSelect = (selectedShow) => {
-        onTvShowSelect(selectedShow);
-        topRef.current.scrollIntoView({ behavior: 'smooth' });
+    const handleNextEpisode = () => {
+        setEpisodeNumber(prev => (prev < totalEpisodes ? prev + 1 : prev));
     };
 
     const handlePrevEpisode = () => {
-        if (episodeNumber > 1) {
-            setEpisodeNumber(prev => prev - 1);
-        } else if (seasonNumber > 1) {
-            setSeasonNumber(prev => prev - 1);
-            setEpisodeNumber(10); // Adjust as needed for the number of episodes per season
-        }
-    };
-
-    const handleNextEpisode = () => {
-        setEpisodeNumber(prev => prev + 1);
-    };
-
-    const handlePrevSeason = () => {
-        if (seasonNumber > 1) {
-            setSeasonNumber(prev => prev - 1);
-            setEpisodeNumber(1);
-        }
+        setEpisodeNumber(prev => (prev > 1 ? prev - 1 : prev));
     };
 
     const handleNextSeason = () => {
-        setSeasonNumber(prev => prev + 1);
+        setSeasonNumber(prev => (prev < totalSeasons ? prev + 1 : prev));
+        setEpisodeNumber(1);
+    };
+
+    const handlePrevSeason = () => {
+        setSeasonNumber(prev => (prev > 1 ? prev - 1 : prev));
         setEpisodeNumber(1);
     };
 
@@ -144,9 +81,7 @@ const TvModal = ({ isOpen, onRequestClose, tvShow, onTvShowSelect }) => {
             {tvShow && (
                 <div className="movie-details-container" ref={topRef}>
                     <button onClick={onRequestClose}>Close</button>
-                    <h2>{tvShow.name} - Season {seasonNumber} Episode {episodeNumber} -
-                        Rating {parseFloat(tvShow.vote_average).toFixed(1) || 'N/A'}</h2>
-
+                    <h2>{tvShow.name} - Season {seasonNumber} Episode {episodeNumber}</h2>
                     <p className="movie-description">{tvShow.overview}</p>
 
                     {episodeUrl && (
@@ -160,6 +95,26 @@ const TvModal = ({ isOpen, onRequestClose, tvShow, onTvShowSelect }) => {
                         ></iframe>
                     )}
 
+                    <div className="controls">
+                        <label>
+                            Select Season:
+                            <select value={seasonNumber} onChange={(e) => setSeasonNumber(Number(e.target.value))}>
+                                {Array.from({ length: totalSeasons }, (_, i) => i + 1).map(season => (
+                                    <option key={season} value={season}>{season}</option>
+                                ))}
+                            </select>
+                        </label>
+
+                        <label>
+                            Select Episode:
+                            <select value={episodeNumber} onChange={(e) => setEpisodeNumber(Number(e.target.value))}>
+                                {Array.from({ length: totalEpisodes }, (_, i) => i + 1).map(episode => (
+                                    <option key={episode} value={episode}>{episode}</option>
+                                ))}
+                            </select>
+                        </label>
+                    </div>
+
                     <div className="episode-controls">
                         <button onClick={handlePrevEpisode}>Previous Episode</button>
                         <button onClick={handleNextEpisode}>Next Episode</button>
@@ -168,58 +123,6 @@ const TvModal = ({ isOpen, onRequestClose, tvShow, onTvShowSelect }) => {
                     <div className="season-controls">
                         <button onClick={handlePrevSeason}>Previous Season</button>
                         <button onClick={handleNextSeason}>Next Season</button>
-                    </div>
-
-                    <div className="switch-container">
-                        <label className="switch">
-                            <input
-                                type="checkbox"
-                                checked={autoSkip}
-                                onChange={() => setAutoSkip(!autoSkip)}
-                            />
-                            <span className="slider"></span>
-                        </label>
-                        <span>Auto-Skip</span>
-                    </div>
-
-                    <div className="recommended-movies">
-                        <h3>Recommended Shows</h3>
-                        <div className="movies-container">
-                            {recommendedShows.map((recShow) => (
-                                <div className="movie-card" key={recShow.id} onClick={() => handleTvShowSelect(recShow)}>
-                                    <div className="movie-poster">
-                                        <img
-                                            src={recShow.poster_path ? `https://image.tmdb.org/t/p/w500/${recShow.poster_path}` : 'default-poster.jpg'}
-                                            alt={recShow.name}
-                                        />
-                                    </div>
-                                    <div className="movie-details">
-                                        <h2>{recShow.name}</h2>
-                                        <p>Rating: {recShow.vote_average || 'N/A'}</p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="recommended-movies">
-                        <h3>Similar Shows</h3>
-                        <div className="movies-container">
-                            {similarShows.map((simShow) => (
-                                <div className="movie-card" key={simShow.id} onClick={() => handleTvShowSelect(simShow)}>
-                                    <div className="movie-poster">
-                                        <img
-                                            src={simShow.poster_path ? `https://image.tmdb.org/t/p/w500/${simShow.poster_path}` : 'default-poster.jpg'}
-                                            alt={simShow.name}
-                                        />
-                                    </div>
-                                    <div className="movie-details">
-                                        <h2>{simShow.name}</h2>
-                                        <p>Rating: {simShow.vote_average || 'N/A'}</p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
                     </div>
                 </div>
             )}
