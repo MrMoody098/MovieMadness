@@ -59,14 +59,14 @@ const MovieModal = ({ movie, onMovieSelect }) => {
         topRef.current.scrollIntoView({ behavior: 'smooth' });
     };
 
-    const movieEmbedUrl = `https://vidsrc.xyz/embed/movie/${movie.id}`;
+    const movieEmbedUrl = `https://www.vidking.net/embed/movie/${movie.id}?autoPlay=true&nextEpisode=true&episodeSelector=true`;
 
     return (
         <div className="movie-details-container" ref={topRef}>
             <div>
                 <h2>{movie.title} - Rating {parseFloat(movie.vote_average).toFixed(1) || 'N/A'}</h2>
                 <p className="movie-description">{movie.overview}</p>
-                <div style={{position: 'relative', paddingBottom: '56.25%', height: 0, overflow: 'hidden'}}>
+                <div style={{position: 'relative', paddingBottom: '75%', height: 0, overflow: 'hidden'}}>
                     <iframe
                         src={movieEmbedUrl}
                         title="Embedded Movie"
