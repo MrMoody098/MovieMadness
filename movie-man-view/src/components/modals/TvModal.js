@@ -51,7 +51,7 @@ const TvModal = ({ isOpen, onRequestClose, tvShow, onTvShowSelect }) => {
 
     useEffect(() => {
         if (tvShow && seasonNumber <= totalSeasons && episodeNumber <= totalEpisodes) {
-            const episodeEmbedUrl = `https://vidsrc.xyz/embed/tv?tmdb=${tvShow.id}&season=${seasonNumber}&episode=${episodeNumber}`;
+            const episodeEmbedUrl = `https://www.vidking.net/embed/tv/${tvShow.id}/${seasonNumber}/${episodeNumber}?autoPlay=true&nextEpisode=true&episodeSelector=true`;
             setEpisodeUrl(episodeEmbedUrl);
         } else {
             setEpisodeUrl('');
@@ -85,14 +85,21 @@ const TvModal = ({ isOpen, onRequestClose, tvShow, onTvShowSelect }) => {
                     <p className="movie-description">{tvShow.overview}</p>
 
                     {episodeUrl && (
-                        <iframe
-                            ref={videoRef}
-                            title={`${tvShow.name} - S${seasonNumber}E${episodeNumber}`}
-                            src={episodeUrl}
-                            width="100%"
-                            height="400"
-                            allowFullScreen
-                        ></iframe>
+                        <div style={{position: 'relative', paddingBottom: '75%', height: 0, overflow: 'hidden'}}>
+                            <iframe
+                                ref={videoRef}
+                                title={`${tvShow.name} - S${seasonNumber}E${episodeNumber}`}
+                                src={episodeUrl}
+                                allowFullScreen
+                                style={{
+                                    position: 'absolute',
+                                    top: 0,
+                                    left: 0,
+                                    width: '100%',
+                                    height: '100%'
+                                }}
+                            ></iframe>
+                        </div>
                     )}
 
                     <div className="controls">
@@ -113,16 +120,6 @@ const TvModal = ({ isOpen, onRequestClose, tvShow, onTvShowSelect }) => {
                                 ))}
                             </select>
                         </label>
-                    </div>
-
-                    <div className="episode-controls">
-                        <button onClick={handlePrevEpisode}>Previous Episode</button>
-                        <button onClick={handleNextEpisode}>Next Episode</button>
-                    </div>
-
-                    <div className="season-controls">
-                        <button onClick={handlePrevSeason}>Previous Season</button>
-                        <button onClick={handleNextSeason}>Next Season</button>
                     </div>
                 </div>
             )}
