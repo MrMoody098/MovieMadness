@@ -3,6 +3,8 @@ import axios from 'axios';
 import Modal from 'react-modal';
 import '../css/TvModal.css';
 import '../css/MoviesList.css';
+import { addTvShowId } from '../utils/recentlyWatchedTv';
+import { saveWatchProgress } from '../../utils/watchProgress';
 
 const API_KEY = 'f58bf4f31de2a8346b5841b863457b1f';
 
@@ -60,6 +62,59 @@ const TvModal = ({ isOpen, onRequestClose, tvShow, onTvShowSelect }) => {
             setEpisodeUrl('');
         }
     }, [tvShow, seasonNumber, episodeNumber, totalSeasons, totalEpisodes, useVidKing]);
+
+    // Listen for VidKing player events to sync episode changes and track watch progress
+    useEffect(() => {
+        const handlePlayerMessage = (event) => {
+            if (!useVidKing || !tvShow) return;
+            
+            try {
+                const messageData = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+                
+                // Check if it's a VidKing player event
+                if (messageData.type === 'PLAYER_EVENT' && messageData.data) {
+                    const { season, episode, event: playerEvent, currentTime, duration } = messageData.data;
+                    
+                    // Update state if season/episode changed (from auto-skip)
+                    if (season && episode) {
+                        if (season !== seasonNumber) {
+                            setSeasonNumber(season);
+                        }
+                        if (episode !== episodeNumber) {
+                            setEpisodeNumber(episode);
+                        }
+                    }
+                    
+                    // Add to recently watched when playback starts
+                    if (playerEvent === 'play' && currentTime < 60) {
+                        addTvShowId(tvShow.id);
+                    }
+                    
+                    // Save watch progress periodically during playback
+                    if (playerEvent === 'timeupdate' && currentTime && duration) {
+                        const currentSeason = season || seasonNumber;
+                        const currentEpisode = episode || episodeNumber;
+                        saveWatchProgress(tvShow.id, currentSeason, currentEpisode, currentTime, duration);
+                    }
+                    
+                    // Update progress when user seeks
+                    if (playerEvent === 'seeked' && currentTime && duration) {
+                        const currentSeason = season || seasonNumber;
+                        const currentEpisode = episode || episodeNumber;
+                        saveWatchProgress(tvShow.id, currentSeason, currentEpisode, currentTime, duration);
+                    }
+                }
+            } catch (error) {
+                // Ignore non-JSON messages
+            }
+        };
+
+        window.addEventListener('message', handlePlayerMessage);
+
+        return () => {
+            window.removeEventListener('message', handlePlayerMessage);
+        };
+    }, [useVidKing, tvShow, seasonNumber, episodeNumber]);
 
     const handleNextEpisode = () => {
         setEpisodeNumber(prev => (prev < totalEpisodes ? prev + 1 : prev));

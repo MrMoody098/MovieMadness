@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import "../css/MoviesList.css";
 import "../css/MovieModal.css";
+import { addMovieId } from '../utils/recentlyWatched';
 
 const API_KEY = 'f58bf4f31de2a8346b5841b863457b1f';
 
@@ -63,6 +64,48 @@ const MovieModal = ({ movie, onMovieSelect }) => {
     const movieEmbedUrl = useVidKing 
         ? `https://www.vidking.net/embed/movie/${movie.id}?autoPlay=true&nextEpisode=true&episodeSelector=true`
         : `https://vidsrc.xyz/embed/movie/${movie.id}`;
+
+    // Listen for VidKing player events to track watch progress
+    useEffect(() => {
+        const handlePlayerMessage = (event) => {
+            if (!useVidKing || !movie) return;
+            
+            try {
+                const messageData = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+                
+                // Check if it's a VidKing player event
+                if (messageData.type === 'PLAYER_EVENT' && messageData.data) {
+                    const { event: playerEvent, currentTime, duration } = messageData.data;
+                    
+                    // Add to recently watched when playback starts
+                    if (playerEvent === 'play' && currentTime < 60) {
+                        addMovieId(movie.id);
+                    }
+                    
+                    // Save progress periodically during playback
+                    if (playerEvent === 'timeupdate' && currentTime && duration) {
+                        const progressKey = `movieProgress_${movie.id}`;
+                        const progressData = {
+                            movieId: movie.id,
+                            watchTime: currentTime,
+                            totalDuration: duration,
+                            progressPercentage: (currentTime / duration) * 100,
+                            lastWatchedDate: new Date().toISOString()
+                        };
+                        localStorage.setItem(progressKey, JSON.stringify(progressData));
+                    }
+                }
+            } catch (error) {
+                // Ignore non-JSON messages
+            }
+        };
+
+        window.addEventListener('message', handlePlayerMessage);
+
+        return () => {
+            window.removeEventListener('message', handlePlayerMessage);
+        };
+    }, [useVidKing, movie]);
 
     return (
         <div className="movie-details-container" ref={topRef}>

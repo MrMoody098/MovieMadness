@@ -30,6 +30,20 @@ const MoviesList = () => {
     const [startX, setStartX] = useState(0);
     const [scrollLeft, setScrollLeft] = useState(0);
 
+    const getMovieProgress = (movieId) => {
+        try {
+            const progressKey = `movieProgress_${movieId}`;
+            const progressData = localStorage.getItem(progressKey);
+            if (progressData) {
+                const parsed = JSON.parse(progressData);
+                return parsed.progressPercentage || 0;
+            }
+        } catch (error) {
+            console.error('Error loading movie progress:', error);
+        }
+        return 0;
+    };
+
     const fetchRecentlyWatchedMovies = async () => {
         const movieIds = getMovieIds();
         const movieDetailsPromises = movieIds.map(id =>
@@ -151,26 +165,34 @@ const MoviesList = () => {
                         onMouseUp={endDrag}
                         onMouseLeave={endDrag}
                     >
-                        {recentlyWatched.map((movie) => (
-                            <div
-                                className={`movie-card ${deleteMode ? 'delete-mode' : ''} ${selectedForDeletion.includes(movie.id) ? 'selected' : ''} ${animateCard === movie.id ? 'animate' : ''}`}
-                                key={movie.id}
-                                onClick={() => handleMovieSelect(movie)}
-                            >
-                                <div className="movie-poster">
-                                    <img src={`https://image.tmdb.org/t/p/w500/${movie.poster_path}`} alt={movie.title}/>
-                                </div>
-                                <div className="movie-details">
-                                    <div className="movie-title"><h2>{movie.title}</h2></div>
-                                    <div className="movie-rating">
-                                        <p>Rating: {movie.vote_average ? movie.vote_average.toFixed(1) : 'N/A'}</p>
-                                        <div className="star-rating">
-                                            {renderStars(Math.round(movie.vote_average / 2))}
+                        {recentlyWatched.map((movie) => {
+                            const progress = getMovieProgress(movie.id);
+                            return (
+                                <div
+                                    className={`movie-card ${deleteMode ? 'delete-mode' : ''} ${selectedForDeletion.includes(movie.id) ? 'selected' : ''} ${animateCard === movie.id ? 'animate' : ''}`}
+                                    key={movie.id}
+                                    onClick={() => handleMovieSelect(movie)}
+                                >
+                                    <div className="movie-poster">
+                                        <img src={`https://image.tmdb.org/t/p/w500/${movie.poster_path}`} alt={movie.title}/>
+                                        {progress > 0 && (
+                                            <div className="progress-bar-container">
+                                                <div className="progress-bar" style={{width: `${progress}%`}}></div>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="movie-details">
+                                        <div className="movie-title"><h2>{movie.title}</h2></div>
+                                        <div className="movie-rating">
+                                            <p>Rating: {movie.vote_average ? movie.vote_average.toFixed(1) : 'N/A'}</p>
+                                            <div className="star-rating">
+                                                {renderStars(Math.round(movie.vote_average / 2))}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 </div>
             )}
