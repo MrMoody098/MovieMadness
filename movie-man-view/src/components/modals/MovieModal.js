@@ -7,6 +7,7 @@ const API_KEY = 'f58bf4f31de2a8346b5841b863457b1f';
 
 const MovieModal = ({ movie, onMovieSelect }) => {
     const [recommendedMovies, setRecommendedMovies] = useState([]);
+    const [useVidKing, setUseVidKing] = useState(true);
     const topRef = useRef(null);
 
     useEffect(() => {
@@ -59,14 +60,31 @@ const MovieModal = ({ movie, onMovieSelect }) => {
         topRef.current.scrollIntoView({ behavior: 'smooth' });
     };
 
-    const movieEmbedUrl = `https://www.vidking.net/embed/movie/${movie.id}?autoPlay=true&nextEpisode=true&episodeSelector=true`;
+    const movieEmbedUrl = useVidKing 
+        ? `https://www.vidking.net/embed/movie/${movie.id}?autoPlay=true&nextEpisode=true&episodeSelector=true`
+        : `https://vidsrc.xyz/embed/movie/${movie.id}`;
 
     return (
         <div className="movie-details-container" ref={topRef}>
             <div>
                 <h2>{movie.title} - Rating {parseFloat(movie.vote_average).toFixed(1) || 'N/A'}</h2>
                 <p className="movie-description">{movie.overview}</p>
-                <div style={{position: 'relative', paddingBottom: '75%', height: 0, overflow: 'hidden'}}>
+                <button 
+                    onClick={() => setUseVidKing(!useVidKing)}
+                    style={{
+                        backgroundColor: '#f5c518',
+                        color: '#000000',
+                        border: 'none',
+                        borderRadius: '5px',
+                        padding: '10px 20px',
+                        cursor: 'pointer',
+                        marginBottom: '10px',
+                        fontWeight: 'bold'
+                    }}
+                >
+                    Switch to {useVidKing ? 'VidSrc' : 'VidKing'}
+                </button>
+                <div style={{position: 'relative', width: '100%', height: '500px', overflow: 'hidden'}}>
                     <iframe
                         src={movieEmbedUrl}
                         title="Embedded Movie"
@@ -77,7 +95,8 @@ const MovieModal = ({ movie, onMovieSelect }) => {
                             top: 0,
                             left: 0,
                             width: '100%',
-                            height: '100%'
+                            height: '100%',
+                            border: 'none'
                         }}
                     />
                 </div>
