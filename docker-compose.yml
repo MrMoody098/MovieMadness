@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  movie-madness:
+    build: .
+    container_name: movie-madness-dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./movie-man-view/src:/app/src
+      - ./movie-man-view/public:/app/public
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+    stdin_open: true
+    tty: true
+

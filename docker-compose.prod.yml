@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  movie-madness-prod:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    container_name: movie-madness-prod
+    ports:
+      - "80:80"
+    restart: unless-stopped
+
