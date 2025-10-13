@@ -3,6 +3,8 @@ import axios from 'axios';
 import Modal from 'react-modal';
 import '../css/TvModal.css';
 import '../css/MoviesList.css';
+import { addTvShowId } from '../utils/recentlyWatchedTv';
+import { saveWatchProgress } from '../../utils/watchProgress';
 
 const API_KEY = 'f58bf4f31de2a8346b5841b863457b1f';
 
@@ -12,6 +14,7 @@ const TvModal = ({ isOpen, onRequestClose, tvShow, onTvShowSelect }) => {
     const [episodeNumber, setEpisodeNumber] = useState(1);
     const [totalSeasons, setTotalSeasons] = useState(1);
     const [totalEpisodes, setTotalEpisodes] = useState(1);
+    const [useVidKing, setUseVidKing] = useState(true);
     const topRef = useRef(null);
     const videoRef = useRef(null);
 
@@ -51,12 +54,67 @@ const TvModal = ({ isOpen, onRequestClose, tvShow, onTvShowSelect }) => {
 
     useEffect(() => {
         if (tvShow && seasonNumber <= totalSeasons && episodeNumber <= totalEpisodes) {
-            const episodeEmbedUrl = `https://www.vidking.net/embed/tv/${tvShow.id}/${seasonNumber}/${episodeNumber}?autoPlay=true&nextEpisode=true&episodeSelector=true`;
+            const episodeEmbedUrl = useVidKing
+                ? `https://www.vidking.net/embed/tv/${tvShow.id}/${seasonNumber}/${episodeNumber}?autoPlay=true&nextEpisode=true&episodeSelector=true`
+                : `https://vidsrc.xyz/embed/tv?tmdb=${tvShow.id}&season=${seasonNumber}&episode=${episodeNumber}`;
             setEpisodeUrl(episodeEmbedUrl);
         } else {
             setEpisodeUrl('');
         }
-    }, [tvShow, seasonNumber, episodeNumber, totalSeasons, totalEpisodes]);
+    }, [tvShow, seasonNumber, episodeNumber, totalSeasons, totalEpisodes, useVidKing]);
+
+    // Listen for VidKing player events to sync episode changes and track watch progress
+    useEffect(() => {
+        const handlePlayerMessage = (event) => {
+            if (!useVidKing || !tvShow) return;
+            
+            try {
+                const messageData = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+                
+                // Check if it's a VidKing player event
+                if (messageData.type === 'PLAYER_EVENT' && messageData.data) {
+                    const { season, episode, event: playerEvent, currentTime, duration } = messageData.data;
+                    
+                    // Update state if season/episode changed (from auto-skip)
+                    if (season && episode) {
+                        if (season !== seasonNumber) {
+                            setSeasonNumber(season);
+                        }
+                        if (episode !== episodeNumber) {
+                            setEpisodeNumber(episode);
+                        }
+                    }
+                    
+                    // Add to recently watched when playback starts
+                    if (playerEvent === 'play' && currentTime < 60) {
+                        addTvShowId(tvShow.id);
+                    }
+                    
+                    // Save watch progress periodically during playback
+                    if (playerEvent === 'timeupdate' && currentTime && duration) {
+                        const currentSeason = season || seasonNumber;
+                        const currentEpisode = episode || episodeNumber;
+                        saveWatchProgress(tvShow.id, currentSeason, currentEpisode, currentTime, duration);
+                    }
+                    
+                    // Update progress when user seeks
+                    if (playerEvent === 'seeked' && currentTime && duration) {
+                        const currentSeason = season || seasonNumber;
+                        const currentEpisode = episode || episodeNumber;
+                        saveWatchProgress(tvShow.id, currentSeason, currentEpisode, currentTime, duration);
+                    }
+                }
+            } catch (error) {
+                // Ignore non-JSON messages
+            }
+        };
+
+        window.addEventListener('message', handlePlayerMessage);
+
+        return () => {
+            window.removeEventListener('message', handlePlayerMessage);
+        };
+    }, [useVidKing, tvShow, seasonNumber, episodeNumber]);
 
     const handleNextEpisode = () => {
         setEpisodeNumber(prev => (prev < totalEpisodes ? prev + 1 : prev));
@@ -83,9 +141,24 @@ const TvModal = ({ isOpen, onRequestClose, tvShow, onTvShowSelect }) => {
                     <button onClick={onRequestClose}>Close</button>
                     <h2>{tvShow.name} - Season {seasonNumber} Episode {episodeNumber}</h2>
                     <p className="movie-description">{tvShow.overview}</p>
+                    <button 
+                        onClick={() => setUseVidKing(!useVidKing)}
+                        style={{
+                            backgroundColor: '#f5c518',
+                            color: '#000000',
+                            border: 'none',
+                            borderRadius: '5px',
+                            padding: '10px 20px',
+                            cursor: 'pointer',
+                            marginBottom: '10px',
+                            fontWeight: 'bold'
+                        }}
+                    >
+                        Switch to {useVidKing ? 'VidSrc' : 'VidKing'}
+                    </button>
 
                     {episodeUrl && (
-                        <div style={{position: 'relative', paddingBottom: '75%', height: 0, overflow: 'hidden'}}>
+                        <div style={{position: 'relative', width: '100%', height: '500px', overflow: 'hidden'}}>
                             <iframe
                                 ref={videoRef}
                                 title={`${tvShow.name} - S${seasonNumber}E${episodeNumber}`}
@@ -96,7 +169,8 @@ const TvModal = ({ isOpen, onRequestClose, tvShow, onTvShowSelect }) => {
                                     top: 0,
                                     left: 0,
                                     width: '100%',
-                                    height: '100%'
+                                    height: '100%',
+                                    border: 'none'
                                 }}
                             ></iframe>
                         </div>

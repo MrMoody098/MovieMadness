@@ -2,11 +2,13 @@ import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import "../css/MoviesList.css";
 import "../css/MovieModal.css";
+import { addMovieId } from '../utils/recentlyWatched';
 
 const API_KEY = 'f58bf4f31de2a8346b5841b863457b1f';
 
 const MovieModal = ({ movie, onMovieSelect }) => {
     const [recommendedMovies, setRecommendedMovies] = useState([]);
+    const [useVidKing, setUseVidKing] = useState(true);
     const topRef = useRef(null);
 
     useEffect(() => {
@@ -59,14 +61,73 @@ const MovieModal = ({ movie, onMovieSelect }) => {
         topRef.current.scrollIntoView({ behavior: 'smooth' });
     };
 
-    const movieEmbedUrl = `https://www.vidking.net/embed/movie/${movie.id}?autoPlay=true&nextEpisode=true&episodeSelector=true`;
+    const movieEmbedUrl = useVidKing 
+        ? `https://www.vidking.net/embed/movie/${movie.id}?autoPlay=true&nextEpisode=true&episodeSelector=true`
+        : `https://vidsrc.xyz/embed/movie/${movie.id}`;
+
+    // Listen for VidKing player events to track watch progress
+    useEffect(() => {
+        const handlePlayerMessage = (event) => {
+            if (!useVidKing || !movie) return;
+            
+            try {
+                const messageData = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+                
+                // Check if it's a VidKing player event
+                if (messageData.type === 'PLAYER_EVENT' && messageData.data) {
+                    const { event: playerEvent, currentTime, duration } = messageData.data;
+                    
+                    // Add to recently watched when playback starts
+                    if (playerEvent === 'play' && currentTime < 60) {
+                        addMovieId(movie.id);
+                    }
+                    
+                    // Save progress periodically during playback
+                    if (playerEvent === 'timeupdate' && currentTime && duration) {
+                        const progressKey = `movieProgress_${movie.id}`;
+                        const progressData = {
+                            movieId: movie.id,
+                            watchTime: currentTime,
+                            totalDuration: duration,
+                            progressPercentage: (currentTime / duration) * 100,
+                            lastWatchedDate: new Date().toISOString()
+                        };
+                        localStorage.setItem(progressKey, JSON.stringify(progressData));
+                    }
+                }
+            } catch (error) {
+                // Ignore non-JSON messages
+            }
+        };
+
+        window.addEventListener('message', handlePlayerMessage);
+
+        return () => {
+            window.removeEventListener('message', handlePlayerMessage);
+        };
+    }, [useVidKing, movie]);
 
     return (
         <div className="movie-details-container" ref={topRef}>
             <div>
                 <h2>{movie.title} - Rating {parseFloat(movie.vote_average).toFixed(1) || 'N/A'}</h2>
                 <p className="movie-description">{movie.overview}</p>
-                <div style={{position: 'relative', paddingBottom: '75%', height: 0, overflow: 'hidden'}}>
+                <button 
+                    onClick={() => setUseVidKing(!useVidKing)}
+                    style={{
+                        backgroundColor: '#f5c518',
+                        color: '#000000',
+                        border: 'none',
+                        borderRadius: '5px',
+                        padding: '10px 20px',
+                        cursor: 'pointer',
+                        marginBottom: '10px',
+                        fontWeight: 'bold'
+                    }}
+                >
+                    Switch to {useVidKing ? 'VidSrc' : 'VidKing'}
+                </button>
+                <div style={{position: 'relative', width: '100%', height: '500px', overflow: 'hidden'}}>
                     <iframe
                         src={movieEmbedUrl}
                         title="Embedded Movie"
@@ -77,7 +138,8 @@ const MovieModal = ({ movie, onMovieSelect }) => {
                             top: 0,
                             left: 0,
                             width: '100%',
-                            height: '100%'
+                            height: '100%',
+                            border: 'none'
                         }}
                     />
                 </div>

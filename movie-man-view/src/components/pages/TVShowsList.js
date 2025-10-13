@@ -5,6 +5,7 @@ import TvModal from "../modals/TvModal";
 import "../css/MoviesList.css";
 import useFetchItems from '../hooks/useFetchItems';
 import { addTvShowId, getTvShowIds } from '../utils/recentlyWatchedTv';
+import { getShowProgress } from '../../utils/watchProgress';
 
 const API_KEY = 'f58bf4f31de2a8346b5841b863457b1f';
 
@@ -133,26 +134,39 @@ const TVShowsList = () => {
                     onMouseUp={endDrag}
                     onMouseLeave={endDrag}
                 >
-                    {recentlyWatchedTv.map((tvShow) => (
-                        <div
-                            className={`movie-card ${deleteMode ? 'delete-mode' : ''} ${selectedForDeletion.includes(tvShow.id) ? 'selected' : ''} ${animateCard === tvShow.id ? 'animate' : ''}`}
-                            key={tvShow.id}
-                            onClick={() => handleTvShowSelect(tvShow)}
-                        >
-                            <div className="movie-poster">
-                                <img src={`https://image.tmdb.org/t/p/w500/${tvShow.poster_path}`} alt={tvShow.name} />
-                            </div>
-                            <div className="movie-details">
-                                <div className="movie-title"><h2>{tvShow.name}</h2></div>
-                                <div className="movie-rating">
-                                    <p>Rating: {tvShow.vote_average ? tvShow.vote_average.toFixed(1) : 'N/A'}</p>
-                                    <div className="star-rating">
-                                        {renderStars(Math.round(tvShow.vote_average / 2))}
+                    {recentlyWatchedTv.map((tvShow) => {
+                        const progressData = getShowProgress(tvShow.id);
+                        const progress = progressData?.progressPercentage || 0;
+                        const seasonEpisode = progressData ? `S${progressData.lastWatchedSeason} E${progressData.lastWatchedEpisode}` : '';
+                        return (
+                            <div
+                                className={`movie-card ${deleteMode ? 'delete-mode' : ''} ${selectedForDeletion.includes(tvShow.id) ? 'selected' : ''} ${animateCard === tvShow.id ? 'animate' : ''}`}
+                                key={tvShow.id}
+                                onClick={() => handleTvShowSelect(tvShow)}
+                            >
+                                <div className="movie-poster">
+                                    <img src={`https://image.tmdb.org/t/p/w500/${tvShow.poster_path}`} alt={tvShow.name} />
+                                    {progress > 0 && (
+                                        <>
+                                            <div className="episode-badge">{seasonEpisode}</div>
+                                            <div className="progress-bar-container">
+                                                <div className="progress-bar" style={{width: `${progress}%`}}></div>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                                <div className="movie-details">
+                                    <div className="movie-title"><h2>{tvShow.name}</h2></div>
+                                    <div className="movie-rating">
+                                        <p>Rating: {tvShow.vote_average ? tvShow.vote_average.toFixed(1) : 'N/A'}</p>
+                                        <div className="star-rating">
+                                            {renderStars(Math.round(tvShow.vote_average / 2))}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             </div>
             </>

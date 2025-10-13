@@ -59,6 +59,7 @@
 }
 
 .movie-poster {
+    position: relative;
     border-radius: 15px;
     height: 300px;
     margin-bottom: 10px;
@@ -278,6 +279,40 @@
 }
 
 
+/* Watch Progress Bar Styles */
+.progress-bar-container {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background-color: rgba(255, 255, 255, 0.3);
+    border-radius: 0 0 15px 15px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #f5c518 0%, #ff6b6b 100%);
+    transition: width 0.3s ease;
+    box-shadow: 0 0 10px rgba(245, 197, 24, 0.5);
+}
+
+/* Episode Badge for TV Shows */
+.episode-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: #f5c518;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 0.85em;
+    font-weight: bold;
+    z-index: 2;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
 @media (max-width: 768px) {
     .movie-card {
         width: 200px; /* Adjust the width for mobile devices */
@@ -300,5 +335,10 @@
 
     .star {
         font-size: 1em; /* Adjust the star size for mobile devices */
+    }
+    
+    .episode-badge {
+        font-size: 0.75em;
+        padding: 3px 8px;
     }
 }
