@@ -5,16 +5,19 @@ import '../css/TvModal.css';
 import '../css/MoviesList.css';
 import { addTvShowId } from '../utils/recentlyWatchedTv';
 import { saveWatchProgress } from '../../utils/watchProgress';
+import WatchPartyManager from '../watchparty/WatchPartyManager';
 
 const API_KEY = 'f58bf4f31de2a8346b5841b863457b1f';
 
-const TvModal = ({ isOpen, onRequestClose, tvShow, onTvShowSelect }) => {
+const TvModal = ({ isOpen, onRequestClose, tvShow, onTvShowSelect, watchPartyRoomId }) => {
     const [episodeUrl, setEpisodeUrl] = useState('');
     const [seasonNumber, setSeasonNumber] = useState(1);
     const [episodeNumber, setEpisodeNumber] = useState(1);
     const [totalSeasons, setTotalSeasons] = useState(1);
     const [totalEpisodes, setTotalEpisodes] = useState(1);
     const [useVidKing, setUseVidKing] = useState(true);
+    const [isWatchPartyOpen, setIsWatchPartyOpen] = useState(!!watchPartyRoomId);
+    const [isHost, setIsHost] = useState(false);
     const topRef = useRef(null);
     const videoRef = useRef(null);
 
@@ -141,21 +144,41 @@ const TvModal = ({ isOpen, onRequestClose, tvShow, onTvShowSelect }) => {
                     <button onClick={onRequestClose}>Close</button>
                     <h2>{tvShow.name} - Season {seasonNumber} Episode {episodeNumber}</h2>
                     <p className="movie-description">{tvShow.overview}</p>
-                    <button 
-                        onClick={() => setUseVidKing(!useVidKing)}
-                        style={{
-                            backgroundColor: '#f5c518',
-                            color: '#000000',
-                            border: 'none',
-                            borderRadius: '5px',
-                            padding: '10px 20px',
-                            cursor: 'pointer',
-                            marginBottom: '10px',
-                            fontWeight: 'bold'
-                        }}
-                    >
-                        Switch to {useVidKing ? 'VidSrc' : 'VidKing'}
-                    </button>
+                    <div style={{ display: 'flex', gap: '10px', marginBottom: '10px', flexWrap: 'wrap' }}>
+                        <button 
+                            onClick={() => setUseVidKing(!useVidKing)}
+                            disabled={isWatchPartyOpen && !isHost}
+                            style={{
+                                backgroundColor: isWatchPartyOpen && !isHost ? '#666' : '#f5c518',
+                                color: '#000000',
+                                border: 'none',
+                                borderRadius: '5px',
+                                padding: '10px 20px',
+                                cursor: isWatchPartyOpen && !isHost ? 'not-allowed' : 'pointer',
+                                fontWeight: 'bold',
+                                opacity: isWatchPartyOpen && !isHost ? 0.6 : 1
+                            }}
+                        >
+                            Switch to {useVidKing ? 'VidSrc' : 'VidKing'}
+                            {isWatchPartyOpen && !isHost && ' (Host Only)'}
+                        </button>
+                        {!isWatchPartyOpen && (
+                            <button 
+                                onClick={() => setIsWatchPartyOpen(true)}
+                                style={{
+                                    backgroundColor: '#e74c3c',
+                                    color: '#ffffff',
+                                    border: 'none',
+                                    borderRadius: '5px',
+                                    padding: '10px 20px',
+                                    cursor: 'pointer',
+                                    fontWeight: 'bold'
+                                }}
+                            >
+                                🎉 Start Watch Party
+                            </button>
+                        )}
+                    </div>
 
                     {episodeUrl && (
                         <div style={{position: 'relative', width: '100%', height: '500px', overflow: 'hidden'}}>
@@ -179,22 +202,60 @@ const TvModal = ({ isOpen, onRequestClose, tvShow, onTvShowSelect }) => {
                     <div className="controls">
                         <label>
                             Select Season:
-                            <select value={seasonNumber} onChange={(e) => setSeasonNumber(Number(e.target.value))}>
+                            <select 
+                                value={seasonNumber} 
+                                onChange={(e) => setSeasonNumber(Number(e.target.value))}
+                                disabled={isWatchPartyOpen && !isHost}
+                                style={{
+                                    opacity: isWatchPartyOpen && !isHost ? 0.6 : 1,
+                                    cursor: isWatchPartyOpen && !isHost ? 'not-allowed' : 'pointer'
+                                }}
+                            >
                                 {Array.from({ length: totalSeasons }, (_, i) => i + 1).map(season => (
                                     <option key={season} value={season}>{season}</option>
                                 ))}
                             </select>
+                            {isWatchPartyOpen && !isHost && <span style={{color: '#888', fontSize: '12px'}}> (Host Only)</span>}
                         </label>
 
                         <label>
                             Select Episode:
-                            <select value={episodeNumber} onChange={(e) => setEpisodeNumber(Number(e.target.value))}>
+                            <select 
+                                value={episodeNumber} 
+                                onChange={(e) => setEpisodeNumber(Number(e.target.value))}
+                                disabled={isWatchPartyOpen && !isHost}
+                                style={{
+                                    opacity: isWatchPartyOpen && !isHost ? 0.6 : 1,
+                                    cursor: isWatchPartyOpen && !isHost ? 'not-allowed' : 'pointer'
+                                }}
+                            >
                                 {Array.from({ length: totalEpisodes }, (_, i) => i + 1).map(episode => (
                                     <option key={episode} value={episode}>{episode}</option>
                                 ))}
                             </select>
+                            {isWatchPartyOpen && !isHost && <span style={{color: '#888', fontSize: '12px'}}> (Host Only)</span>}
                         </label>
                     </div>
+
+                    {/* Watch Party Manager */}
+                    <WatchPartyManager
+                        isOpen={isWatchPartyOpen}
+                        onClose={() => setIsWatchPartyOpen(false)}
+                        contentType="tv"
+                        contentData={{
+                            id: tvShow.id,
+                            name: tvShow.name,
+                            seasonNumber,
+                            episodeNumber
+                        }}
+                        iframeRef={videoRef}
+                        onSeasonEpisodeChange={(season, episode) => {
+                            setSeasonNumber(season);
+                            setEpisodeNumber(episode);
+                        }}
+                        initialRoomId={watchPartyRoomId}
+                        onHostStatusChange={setIsHost}
+                    />
                 </div>
             )}
         </Modal>

@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import NavBar from "../NavBar";
 import { getMovieIds, addMovieId } from '../utils/recentlyWatched';
 import { getTvShowIds, addTvShowId } from '../utils/recentlyWatchedTv';
 import '../css/MoviesList.css';
@@ -9,7 +8,7 @@ import GenreCarousel from "../carosel/GenreCarousel";
 
 const API_KEY = 'f58bf4f31de2a8346b5841b863457b1f';
 
-const ExploreAll = () => {
+const ExploreAll = ({ openMovieModal }) => {
     const [recentlyWatched, setRecentlyWatched] = useState([]);
 
     const fetchRecentlyWatched = async () => {
@@ -53,7 +52,6 @@ const ExploreAll = () => {
 
     return (
         <div>
-            <NavBar />
             <Carousel />
             <div className="recently-watched">
                 <h2>All Recently Watched</h2>

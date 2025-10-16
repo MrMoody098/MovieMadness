@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import NavBar from '../NavBar';
 import MovieModal from '../modals/MovieModal';
 import Modal from 'react-modal';
 import '../css/MoviesList.css';
@@ -9,7 +8,7 @@ import axios from 'axios';
 
 const API_KEY = 'f58bf4f31de2a8346b5841b863457b1f';
 
-const MoviesList = () => {
+const MoviesList = ({ openMovieModal }) => {
     const {
         items: movies,
         selectedItem: selectedMovie,
@@ -141,7 +140,6 @@ const MoviesList = () => {
 
     return (
         <div>
-            <NavBar isModalOpen={isModalOpen} onSearch={setSearchQuery}/>
             {recentlyWatched.length > 0 && (
                 <div className="recently-watched">
                     <h2>Recently Watched</h2>

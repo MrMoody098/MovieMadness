@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import '../App.css';
 
-const NavBar = ({ onSearch, isModalOpen }) => {
+const NavBar = ({ onSearch, isModalOpen, onJoinRoom }) => {
   const [show, setShow] = useState(true);
   const [query, setQuery] = useState('');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -67,6 +67,23 @@ const NavBar = ({ onSearch, isModalOpen }) => {
             <Link to="/movies">Movies</Link>
             <Link to="/tv-shows">TV Shows</Link>
             <Link to="/filter">Filter</Link>
+            <button 
+              className="join-room-button"
+              onClick={onJoinRoom}
+              style={{
+                backgroundColor: '#e74c3c',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '5px',
+                padding: '8px 16px',
+                cursor: 'pointer',
+                fontWeight: 'bold',
+                fontSize: '14px',
+                marginLeft: '10px'
+              }}
+            >
+              🎉 Join Room
+            </button>
           </div>
         </div>
       </div>

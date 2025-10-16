@@ -3,13 +3,17 @@ import axios from 'axios';
 import "../css/MoviesList.css";
 import "../css/MovieModal.css";
 import { addMovieId } from '../utils/recentlyWatched';
+import WatchPartyManager from '../watchparty/WatchPartyManager';
 
 const API_KEY = 'f58bf4f31de2a8346b5841b863457b1f';
 
-const MovieModal = ({ movie, onMovieSelect }) => {
+const MovieModal = ({ movie, onMovieSelect, watchPartyRoomId }) => {
     const [recommendedMovies, setRecommendedMovies] = useState([]);
     const [useVidKing, setUseVidKing] = useState(true);
+    const [isWatchPartyOpen, setIsWatchPartyOpen] = useState(!!watchPartyRoomId);
+    const [isHost, setIsHost] = useState(false);
     const topRef = useRef(null);
+    const iframeRef = useRef(null);
 
     useEffect(() => {
         const fetchRecommendedMovies = async () => {
@@ -95,6 +99,13 @@ const MovieModal = ({ movie, onMovieSelect }) => {
                         localStorage.setItem(progressKey, JSON.stringify(progressData));
                     }
                 }
+                
+                // Handle control commands from VideoSync
+                if (messageData.type === 'CONTROL_COMMAND') {
+                    const { command, value } = messageData;
+                    console.log('Received control command:', command, value);
+                    // The iframe player should handle these commands
+                }
             } catch (error) {
                 // Ignore non-JSON messages
             }
@@ -112,23 +123,44 @@ const MovieModal = ({ movie, onMovieSelect }) => {
             <div>
                 <h2>{movie.title} - Rating {parseFloat(movie.vote_average).toFixed(1) || 'N/A'}</h2>
                 <p className="movie-description">{movie.overview}</p>
-                <button 
-                    onClick={() => setUseVidKing(!useVidKing)}
-                    style={{
-                        backgroundColor: '#f5c518',
-                        color: '#000000',
-                        border: 'none',
-                        borderRadius: '5px',
-                        padding: '10px 20px',
-                        cursor: 'pointer',
-                        marginBottom: '10px',
-                        fontWeight: 'bold'
-                    }}
-                >
-                    Switch to {useVidKing ? 'VidSrc' : 'VidKing'}
-                </button>
+                <div style={{ display: 'flex', gap: '10px', marginBottom: '10px', flexWrap: 'wrap' }}>
+                    <button 
+                        onClick={() => setUseVidKing(!useVidKing)}
+                        disabled={isWatchPartyOpen && !isHost}
+                        style={{
+                            backgroundColor: isWatchPartyOpen && !isHost ? '#666' : '#f5c518',
+                            color: '#000000',
+                            border: 'none',
+                            borderRadius: '5px',
+                            padding: '10px 20px',
+                            cursor: isWatchPartyOpen && !isHost ? 'not-allowed' : 'pointer',
+                            fontWeight: 'bold',
+                            opacity: isWatchPartyOpen && !isHost ? 0.6 : 1
+                        }}
+                    >
+                        Switch to {useVidKing ? 'VidSrc' : 'VidKing'}
+                        {isWatchPartyOpen && !isHost && ' (Host Only)'}
+                    </button>
+                    {!isWatchPartyOpen && (
+                        <button 
+                            onClick={() => setIsWatchPartyOpen(true)}
+                            style={{
+                                backgroundColor: '#e74c3c',
+                                color: '#ffffff',
+                                border: 'none',
+                                borderRadius: '5px',
+                                padding: '10px 20px',
+                                cursor: 'pointer',
+                                fontWeight: 'bold'
+                            }}
+                        >
+                            🎉 Start Watch Party
+                        </button>
+                    )}
+                </div>
                 <div style={{position: 'relative', width: '100%', height: '500px', overflow: 'hidden'}}>
                     <iframe
+                        ref={iframeRef}
                         src={movieEmbedUrl}
                         title="Embedded Movie"
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -168,6 +200,17 @@ const MovieModal = ({ movie, onMovieSelect }) => {
                     )}
                 </div>
             </div>
+
+            {/* Watch Party Manager */}
+            <WatchPartyManager
+                isOpen={isWatchPartyOpen}
+                onClose={() => setIsWatchPartyOpen(false)}
+                contentType="movie"
+                contentData={movie}
+                iframeRef={iframeRef}
+                initialRoomId={watchPartyRoomId}
+                onHostStatusChange={setIsHost}
+            />
         </div>
     );
 };

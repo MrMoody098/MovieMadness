@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
 import { Range } from 'react-range';
 import "../css/Filter.css";
-import NavBar from "../NavBar";
 import Modal from 'react-modal';
 import MovieModal from "../modals/MovieModal";
 import TvModal from "../modals/TvModal";
@@ -12,7 +11,7 @@ const TMDB_API_KEY = 'f58bf4f31de2a8346b5841b863457b1f'; // Your API key
 const MIN_LENGTH = 0;
 const MAX_LENGTH = 300;
 
-const Filter = () => {
+const Filter = ({ openMovieModal }) => {
     const [genres, setGenres] = useState([]);
     const [languages, setLanguages] = useState([]);
     const [selectedGenre, setSelectedGenre] = useState('');
@@ -138,8 +137,6 @@ const Filter = () => {
 
     return (
         <div className="filter-container">
-            <NavBar isModalOpen={isModalOpen}   />
-
             <div className="filter-header">
                 <h2>Filter by Genre</h2>
                 <div className="switch-container">

@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
-import NavBar from "../NavBar";
 import TvModal from "../modals/TvModal";
 import "../css/MoviesList.css";
 import useFetchItems from '../hooks/useFetchItems';
@@ -109,7 +108,6 @@ const TVShowsList = () => {
     };
     return (
         <div>
-            <NavBar isModalOpen={isModalOpen} onSearch={setSearchQuery} />
             {recentlyWatchedTv.length > 0 && <>
             <div className="recently-watched">
                 <h2>Recently Watched TV Shows</h2>
