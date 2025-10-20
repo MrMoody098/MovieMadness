@@ -50,6 +50,11 @@ const useFetchItems = (type) => {
             setItems([]);
             setPage(1);
             fetchItems(searchQuery, 1);
+        } else {
+            // Clear search results and show trending when query is empty
+            setItems([]);
+            setPage(1);
+            fetchItems('', 1);
         }
     }, [searchQuery]);
 

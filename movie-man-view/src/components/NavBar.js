@@ -22,7 +22,12 @@ const NavBar = ({ onSearch, isModalOpen }) => {
   };
 
   const handleChange = (event) => {
-    setQuery(event.target.value);
+    const value = event.target.value;
+    setQuery(value);
+    // If search is cleared, trigger search with empty string
+    if (value === '') {
+      onSearch('');
+    }
   };
 
   const handleSearch = () => {

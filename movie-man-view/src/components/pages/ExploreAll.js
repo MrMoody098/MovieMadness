@@ -6,11 +6,21 @@ import { getTvShowIds, addTvShowId } from '../utils/recentlyWatchedTv';
 import '../css/MoviesList.css';
 import Carousel from "../carosel/Carosel";
 import GenreCarousel from "../carosel/GenreCarousel";
+import useFetchItems from '../hooks/useFetchItems';
+import MovieModal from '../modals/MovieModal';
+import TvModal from '../modals/TvModal';
+import Modal from 'react-modal';
 
 const API_KEY = 'f58bf4f31de2a8346b5841b863457b1f';
 
 const ExploreAll = () => {
     const [recentlyWatched, setRecentlyWatched] = useState([]);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [searchResults, setSearchResults] = useState([]);
+    const [isSearching, setIsSearching] = useState(false);
+    const [selectedItem, setSelectedItem] = useState(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [modalType, setModalType] = useState(''); // 'movie' or 'tv'
 
     const fetchRecentlyWatched = async () => {
         const movieIds = getMovieIds();
@@ -53,7 +63,7 @@ const ExploreAll = () => {
 
     return (
         <div>
-            <NavBar />
+            <NavBar onSearch={() => {}} />
             <Carousel />
             <div className="recently-watched">
                 <h2>All Recently Watched</h2>
