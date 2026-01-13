@@ -100,7 +100,7 @@ export const AuthProvider = ({ children }) => {
       if (error) throw error;
 
       if (data.user) {
-        const { error: contributorError } = await supabase
+        const { data: contributorData, error: contributorError } = await supabase
           .from('contributors')
           .insert({
             user_id: data.user.id,
@@ -109,11 +109,16 @@ export const AuthProvider = ({ children }) => {
             is_approved: false,
             is_admin: false,
             created_at: new Date().toISOString(),
-          });
+          })
+          .select();
 
         if (contributorError) {
           console.error('Error creating contributor record:', contributorError);
+          // Return the error so it can be displayed to the user
+          return { data: null, error: { message: `Account created but failed to set up profile: ${contributorError.message}` } };
         }
+        
+        console.log('Contributor record created:', contributorData);
       }
 
       return { data, error: null };
