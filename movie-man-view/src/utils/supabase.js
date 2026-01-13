@@ -20,11 +20,19 @@ export const isApprovedContributor = async (userId) => {
   
   try {
     console.log('Checking approval for user:', userId);
-    const { data, error } = await supabase
+    
+    // Add timeout to prevent hanging
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Approval check timeout')), 10000)
+    );
+    
+    const queryPromise = supabase
       .from('contributors')
       .select('is_approved')
       .eq('user_id', userId)
-      .single();
+      .maybeSingle(); // Use maybeSingle instead of single to handle no record gracefully
+    
+    const { data, error } = await Promise.race([queryPromise, timeoutPromise]);
     
     console.log('Approval check result:', { data, error });
     
@@ -39,7 +47,7 @@ export const isApprovedContributor = async (userId) => {
     }
     
     if (!data) {
-      console.log('No data returned from approval check');
+      console.log('No data returned from approval check - record may not exist');
       return false;
     }
     
@@ -48,6 +56,7 @@ export const isApprovedContributor = async (userId) => {
     return approved;
   } catch (error) {
     console.error('Exception checking user status:', error);
+    // If timeout or other error, assume not approved for security
     return false;
   }
 };
