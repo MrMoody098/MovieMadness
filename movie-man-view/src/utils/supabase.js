@@ -28,7 +28,6 @@ export const isApprovedContributor = async (userId) => {
 };
 
 export const isAdmin = async (userId) => {
-export const isAdmin = async (userId) => {
   if (!userId) return false;
   
   try {
