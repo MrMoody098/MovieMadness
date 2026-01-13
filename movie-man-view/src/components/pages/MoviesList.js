@@ -106,11 +106,6 @@ const MoviesList = () => {
         fetchRecentlyWatchedMovies(); // Update recently watched movies and recommendations
     };
 
-    const handleCancelDeleteMode = () => {
-        setSelectedForDeletion([]);
-        setDeleteMode(false);
-    };
-
     const renderStars = (rating) => {
         const stars = [];
         for (let i = 1; i <= 5; i++) {

@@ -30,6 +30,7 @@ const GenreCarousel = ({ genreId }) => {
 
     useEffect(() => {
         fetchMovies();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [genreId]);
 
     const handleScroll = () => {
@@ -49,6 +50,7 @@ const GenreCarousel = ({ genreId }) => {
                 carouselElement.removeEventListener('scroll', handleScroll);
             };
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [loading]);
 
     return (

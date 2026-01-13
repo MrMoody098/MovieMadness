@@ -14,9 +14,7 @@ const TVShowsList = () => {
         items: tvShows,
         selectedItem: selectedTVShow,
         isModalOpen,
-        searchQuery,
         setSearchQuery,
-        hasMore,
         loading,
         handleItemClick,
         closeModal,
@@ -65,11 +63,6 @@ const TVShowsList = () => {
         setSelectedForDeletion([]);
         setDeleteMode(false);
         fetchRecentlyWatchedTvShows(); // Update recently watched TV shows
-    };
-
-    const handleCancelDeleteMode = () => {
-        setSelectedForDeletion([]);
-        setDeleteMode(false);
     };
 
     const renderStars = (rating) => {

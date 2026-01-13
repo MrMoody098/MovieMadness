@@ -1,26 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import NavBar from "../NavBar";
-import { getMovieIds, addMovieId } from '../utils/recentlyWatched';
-import { getTvShowIds, addTvShowId } from '../utils/recentlyWatchedTv';
+import { getMovieIds } from '../utils/recentlyWatched';
+import { getTvShowIds } from '../utils/recentlyWatchedTv';
 import '../css/MoviesList.css';
 import Carousel from "../carosel/Carosel";
 import GenreCarousel from "../carosel/GenreCarousel";
-import useFetchItems from '../hooks/useFetchItems';
-import MovieModal from '../modals/MovieModal';
-import TvModal from '../modals/TvModal';
-import Modal from 'react-modal';
 
 const API_KEY = 'f58bf4f31de2a8346b5841b863457b1f';
 
 const ExploreAll = () => {
     const [recentlyWatched, setRecentlyWatched] = useState([]);
-    const [searchQuery, setSearchQuery] = useState('');
-    const [searchResults, setSearchResults] = useState([]);
-    const [isSearching, setIsSearching] = useState(false);
-    const [selectedItem, setSelectedItem] = useState(null);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [modalType, setModalType] = useState(''); // 'movie' or 'tv'
 
     const fetchRecentlyWatched = async () => {
         const movieIds = getMovieIds();
@@ -46,6 +36,7 @@ const ExploreAll = () => {
 
     useEffect(() => {
         fetchRecentlyWatched();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const handleDelete = (id, type) => {
@@ -85,11 +76,13 @@ const ExploreAll = () => {
             <div className="genre-carousel">
                 <div className="action-movies">
                     <h2>Action Movies</h2>
-                    <GenreCarousel genreName="action" />  // For Action genre
+                    {/* For Action genre */}
+                    <GenreCarousel genreName="action" />
                 </div>
                 <div className="comedy-movies">
                     <h2>Comedy Movies</h2>
-                    <GenreCarousel genreName="comedy" />  // For Comedy genre
+                    {/* For Comedy genre */}
+                    <GenreCarousel genreName="comedy" />
                 </div>
              </div>
         </div>

@@ -55,6 +55,7 @@ const TvModal = ({ isOpen, onRequestClose, tvShow, onTvShowSelect }) => {
             }
         };
         fetchSeasonDetails();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [tvShow, seasonNumber]);
 
     // Fetch trailer ONLY for users who are NOT signed in (public users)
@@ -136,24 +137,6 @@ const TvModal = ({ isOpen, onRequestClose, tvShow, onTvShowSelect }) => {
             window.removeEventListener('message', handlePlayerMessage);
         };
     }, [useVidKing, tvShow, seasonNumber, episodeNumber]);
-
-    const handleNextEpisode = () => {
-        setEpisodeNumber(prev => (prev < totalEpisodes ? prev + 1 : prev));
-    };
-
-    const handlePrevEpisode = () => {
-        setEpisodeNumber(prev => (prev > 1 ? prev - 1 : prev));
-    };
-
-    const handleNextSeason = () => {
-        setSeasonNumber(prev => (prev < totalSeasons ? prev + 1 : prev));
-        setEpisodeNumber(1);
-    };
-
-    const handlePrevSeason = () => {
-        setSeasonNumber(prev => (prev > 1 ? prev - 1 : prev));
-        setEpisodeNumber(1);
-    };
 
     return (
         <Modal isOpen={isOpen} onRequestClose={onRequestClose} contentLabel="TV Show Episode">

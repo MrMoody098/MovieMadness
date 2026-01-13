@@ -25,6 +25,7 @@ const Carousel = () => {
             clearInterval(autoScrollIntervalRef.current);
             clearTimeout(scrollPauseTimeoutRef.current);
         };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const loadBatch = async () => {
@@ -101,14 +102,16 @@ const Carousel = () => {
     };
 
     useEffect(() => {
-        if (carouselRef.current) {
-            carouselRef.current.addEventListener("scroll", checkScrollPosition);
+        const carouselElement = carouselRef.current;
+        if (carouselElement) {
+            carouselElement.addEventListener("scroll", checkScrollPosition);
         }
         return () => {
-            if (carouselRef.current) {
-                carouselRef.current.removeEventListener("scroll", checkScrollPosition);
+            if (carouselElement) {
+                carouselElement.removeEventListener("scroll", checkScrollPosition);
             }
         };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const renderStars = (rating) => {

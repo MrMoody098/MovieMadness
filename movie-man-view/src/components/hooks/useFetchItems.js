@@ -43,6 +43,7 @@ const useFetchItems = (type) => {
 
     useEffect(() => {
         fetchItems('', page);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [page]);
 
     useEffect(() => {
@@ -56,6 +57,7 @@ const useFetchItems = (type) => {
             setPage(1);
             fetchItems('', 1);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [searchQuery]);
 
     const handleItemClick = (item) => {

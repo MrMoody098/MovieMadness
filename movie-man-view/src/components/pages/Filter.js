@@ -91,12 +91,14 @@ const Filter = () => {
         setPage(1);
         setHasMore(true);
         fetchItemsByGenre(selectedGenre, 1);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedGenre, isMovieMode, minVoteCount, minRating, maxRating, selectedLanguage, lengthRange]);
 
     useEffect(() => {
         if (page > 1) {
             fetchItemsByGenre(selectedGenre, page);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [page]);
 
     const handleGenreChange = (event) => {
