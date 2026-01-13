@@ -74,6 +74,13 @@ module.exports = {
         webpackConfig.resolve.extensions.unshift('.js');
       }
 
+      // Fix CSS minimization issues - disable CSS minification temporarily
+      if (webpackConfig.optimization && webpackConfig.optimization.minimizer) {
+        webpackConfig.optimization.minimizer = webpackConfig.optimization.minimizer.filter(
+          (plugin) => plugin.constructor.name !== 'CssMinimizerPlugin'
+        );
+      }
+
       return webpackConfig;
     },
   },
