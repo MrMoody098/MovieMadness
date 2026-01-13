@@ -129,28 +129,40 @@ export const AuthProvider = ({ children }) => {
 
   const signIn = async (email, password) => {
     try {
+      console.log('Starting sign in...');
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Sign in error:', error);
+        throw error;
+      }
+
+      console.log('Sign in successful, user:', data.user?.id);
 
       if (data.user) {
         // Check if user is approved before allowing sign in
+        console.log('Checking approval status...');
         const isApproved = await isApprovedContributor(data.user.id);
+        console.log('Approval status:', isApproved);
         
         if (!isApproved) {
+          console.log('User not approved, signing out...');
           // Sign them out immediately if not approved
           await supabase.auth.signOut();
           throw new Error('Please wait for account approval before signing in.');
         }
 
+        console.log('User approved, checking contributor status...');
         await checkContributorStatus(data.user.id);
+        console.log('Sign in complete');
       }
 
       return { data, error: null };
     } catch (error) {
+      console.error('Sign in failed:', error);
       return { data: null, error };
     }
   };
