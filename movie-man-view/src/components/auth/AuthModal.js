@@ -20,15 +20,20 @@ const AuthModal = ({ isOpen, onRequestClose, initialMode = 'login' }) => {
     setSuccess('');
     setLoading(true);
 
+    console.log('Form submitted:', { mode, email, hasPassword: !!password });
+
     try {
       if (mode === 'login') {
-        const { error } = await signIn(email, password);
-        if (error) {
+        console.log('Attempting sign in...');
+        const result = await signIn(email, password);
+        console.log('Sign in result:', result);
+        
+        if (result.error) {
           // Check if it's an approval error
-          if (error.message && error.message.includes('approval')) {
+          if (result.error.message && result.error.message.includes('approval')) {
             setError('Please wait for account approval before signing in.');
           } else {
-            throw error;
+            throw result.error;
           }
         } else {
           setSuccess('Successfully signed in!');
@@ -38,8 +43,13 @@ const AuthModal = ({ isOpen, onRequestClose, initialMode = 'login' }) => {
           }, 1000);
         }
       } else {
-        const { error } = await signUp(email, password, displayName);
-        if (error) throw error;
+        console.log('Attempting sign up...');
+        const result = await signUp(email, password, displayName);
+        console.log('Sign up result:', result);
+        
+        if (result.error) {
+          throw result.error;
+        }
         setSuccess('Account created! Your account is pending approval. You will be able to sign in once approved.');
         setTimeout(() => {
           setMode('login');
@@ -47,6 +57,7 @@ const AuthModal = ({ isOpen, onRequestClose, initialMode = 'login' }) => {
         }, 3000);
       }
     } catch (err) {
+      console.error('Auth error:', err);
       setError(err.message || 'An error occurred');
     } finally {
       setLoading(false);
