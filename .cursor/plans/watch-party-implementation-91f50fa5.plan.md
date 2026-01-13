@@ -1,4 +1,12 @@
-<!-- 91f50fa5-ecd0-46a5-b1e7-6a1d2dfcb0c2 91de282f-edde-43ed-93ed-ed5ec79892d9 -->
+---
+name: Add Join Room to Navigation Bar
+overview: ""
+todos:
+  - id: be5eb67f-888d-4e98-8130-deae39e0d190
+    content: Create WatchParty.css with responsive dark theme styling
+    status: pending
+---
+
 # Add Join Room to Navigation Bar
 
 ## Changes Needed
@@ -54,15 +62,3 @@ Update `App.js` to:
 4. System validates room exists and fetches room data
 5. Opens appropriate modal (movie/TV) with watch party active
 6. User is automatically connected to the watch party
-
-### To-dos
-
-- [ ] Install required npm packages (emoji-picker-react, react-copy-to-clipboard)
-- [ ] Extend watchParty.js to support movies, video sync state, and user nicknames
-- [ ] Create videoSync.js utility for handling iframe player sync logic
-- [ ] Create ChatPanel.js component with emoji picker integration
-- [ ] Create ParticipantsList.js component to display active users
-- [ ] Create WatchPartyManager.js main component integrating chat, participants, and sync
-- [ ] Add watch party button and integration to MovieModal.js
-- [ ] Add watch party button and integration to TvModal.js
-- [ ] Create WatchParty.css with responsive dark theme styling

@@ -17,7 +17,7 @@ const TvModal = ({ isOpen, onRequestClose, tvShow, onTvShowSelect }) => {
     const [episodeNumber, setEpisodeNumber] = useState(1);
     const [totalSeasons, setTotalSeasons] = useState(1);
     const [totalEpisodes, setTotalEpisodes] = useState(1);
-    const [useVidKing, setUseVidKing] = useState(true);
+    const [useSourceA, setUseSourceA] = useState(true);
     const [trailerId, setTrailerId] = useState(null);
     const [loadingTrailer, setLoadingTrailer] = useState(false);
     const topRef = useRef(null);
@@ -58,8 +58,6 @@ const TvModal = ({ isOpen, onRequestClose, tvShow, onTvShowSelect }) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [tvShow, seasonNumber]);
 
-    // Fetch trailer ONLY for users who are NOT signed in (public users)
-    // Signed-in users (even if not approved) should not see trailers
     useEffect(() => {
         if (!user && !isContributor && tvShow) {
             setLoadingTrailer(true);
@@ -74,30 +72,31 @@ const TvModal = ({ isOpen, onRequestClose, tvShow, onTvShowSelect }) => {
         }
     }, [tvShow, isContributor, user]);
 
+    const getEpisodeUrl = (showId, season, episode, sourceA) => {
+        if (sourceA) {
+            return `https://www.vidking.net/embed/tv/${showId}/${season}/${episode}?autoPlay=true&nextEpisode=true&episodeSelector=true`;
+        }
+        return `https://vidsrc.xyz/embed/tv?tmdb=${showId}&season=${season}&episode=${episode}`;
+    };
+
     useEffect(() => {
         if (isContributor && tvShow && seasonNumber <= totalSeasons && episodeNumber <= totalEpisodes) {
-            const episodeEmbedUrl = useVidKing
-                ? `https://www.vidking.net/embed/tv/${tvShow.id}/${seasonNumber}/${episodeNumber}?autoPlay=true&nextEpisode=true&episodeSelector=true`
-                : `https://vidsrc.xyz/embed/tv?tmdb=${tvShow.id}&season=${seasonNumber}&episode=${episodeNumber}`;
-            setEpisodeUrl(episodeEmbedUrl);
+            setEpisodeUrl(getEpisodeUrl(tvShow.id, seasonNumber, episodeNumber, useSourceA));
         } else {
             setEpisodeUrl('');
         }
-    }, [tvShow, seasonNumber, episodeNumber, totalSeasons, totalEpisodes, useVidKing, isContributor]);
+    }, [tvShow, seasonNumber, episodeNumber, totalSeasons, totalEpisodes, useSourceA, isContributor]);
 
-    // Listen for VidKing player events to sync episode changes and track watch progress
     useEffect(() => {
         const handlePlayerMessage = (event) => {
-            if (!useVidKing || !tvShow) return;
+            if (!useSourceA || !tvShow) return;
             
             try {
                 const messageData = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
                 
-                // Check if it's a VidKing player event
                 if (messageData.type === 'PLAYER_EVENT' && messageData.data) {
                     const { season, episode, event: playerEvent, currentTime, duration } = messageData.data;
                     
-                    // Update state if season/episode changed (from auto-skip)
                     if (season && episode) {
                         if (season !== seasonNumber) {
                             setSeasonNumber(season);
@@ -107,19 +106,16 @@ const TvModal = ({ isOpen, onRequestClose, tvShow, onTvShowSelect }) => {
                         }
                     }
                     
-                    // Add to recently watched when playback starts
                     if (playerEvent === 'play' && currentTime < 60) {
                         addTvShowId(tvShow.id);
                     }
                     
-                    // Save watch progress periodically during playback
                     if (playerEvent === 'timeupdate' && currentTime && duration) {
                         const currentSeason = season || seasonNumber;
                         const currentEpisode = episode || episodeNumber;
                         saveWatchProgress(tvShow.id, currentSeason, currentEpisode, currentTime, duration);
                     }
                     
-                    // Update progress when user seeks
                     if (playerEvent === 'seeked' && currentTime && duration) {
                         const currentSeason = season || seasonNumber;
                         const currentEpisode = episode || episodeNumber;
@@ -127,7 +123,7 @@ const TvModal = ({ isOpen, onRequestClose, tvShow, onTvShowSelect }) => {
                     }
                 }
             } catch (error) {
-                // Ignore non-JSON messages
+                // Ignore parsing errors
             }
         };
 
@@ -136,7 +132,7 @@ const TvModal = ({ isOpen, onRequestClose, tvShow, onTvShowSelect }) => {
         return () => {
             window.removeEventListener('message', handlePlayerMessage);
         };
-    }, [useVidKing, tvShow, seasonNumber, episodeNumber]);
+    }, [useSourceA, tvShow, seasonNumber, episodeNumber]);
 
     return (
         <Modal isOpen={isOpen} onRequestClose={onRequestClose} contentLabel="TV Show Episode">
@@ -148,7 +144,7 @@ const TvModal = ({ isOpen, onRequestClose, tvShow, onTvShowSelect }) => {
                     <div style={{ display: 'flex', gap: '10px', marginBottom: '10px', flexWrap: 'wrap' }}>
                         {isContributor && (
                             <button
-                                onClick={() => setUseVidKing(!useVidKing)}
+                                onClick={() => setUseSourceA(!useSourceA)}
                                 style={{
                                     backgroundColor: '#f5c518',
                                     color: '#000000',
@@ -159,7 +155,7 @@ const TvModal = ({ isOpen, onRequestClose, tvShow, onTvShowSelect }) => {
                                     fontWeight: 'bold'
                                 }}
                             >
-                                Switch to {useVidKing ? 'VidSrc' : 'VidKing'}
+                                Switch Source
                             </button>
                         )}
                     </div>
@@ -182,7 +178,6 @@ const TvModal = ({ isOpen, onRequestClose, tvShow, onTvShowSelect }) => {
                             ></iframe>
                         </div>
                     ) : user ? (
-                        // Signed in but not approved - show waiting message
                         <div style={{
                             display: 'flex',
                             alignItems: 'center',
@@ -200,7 +195,6 @@ const TvModal = ({ isOpen, onRequestClose, tvShow, onTvShowSelect }) => {
                             </div>
                         </div>
                     ) : (
-                        // Public user (not signed in) - show trailer
                         <>
                             {loadingTrailer ? (
                                 <div style={{

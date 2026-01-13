@@ -81,7 +81,7 @@ const AdminPanel = () => {
 
   return (
     <div className="admin-panel">
-      <h1>Admin Panel - Contributors Management</h1>
+      <h1>Admin Panel - User Management</h1>
 
       {message.text && (
         <div className={`message ${message.type}`}>{message.text}</div>

@@ -9,7 +9,6 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// Helper function to check if user is approved contributor
 export const isApprovedContributor = async (userId) => {
   if (!userId) return false;
   
@@ -23,16 +22,12 @@ export const isApprovedContributor = async (userId) => {
     if (error || !data) return false;
     return data.is_approved === true;
   } catch (error) {
-    console.error('Error checking contributor status:', error);
+    console.error('Error checking user status:', error);
     return false;
   }
 };
 
-// Note: Streaming services (vidking.net, vidsrc.xyz) use direct embed URLs
-// with TMDB IDs and don't require API keys. The api_keys table is optional
-// and can be used if you need to store API keys for other services in the future.
-
-// Helper function to check if user is admin
+export const isAdmin = async (userId) => {
 export const isAdmin = async (userId) => {
   if (!userId) return false;
   
@@ -46,7 +41,7 @@ export const isAdmin = async (userId) => {
     if (error || !data) return false;
     return data.is_admin === true;
   } catch (error) {
-    console.error('Error checking admin status:', error);
+    console.error('Error checking user role:', error);
     return false;
   }
 };

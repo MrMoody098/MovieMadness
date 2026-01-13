@@ -11,7 +11,7 @@ const API_KEY = 'f58bf4f31de2a8346b5841b863457b1f';
 const MovieModal = ({ movie, onMovieSelect }) => {
     const { user, isContributor } = useAuth();
     const [recommendedMovies, setRecommendedMovies] = useState([]);
-    const [useVidKing, setUseVidKing] = useState(true);
+    const [useSourceA, setUseSourceA] = useState(true);
     const [trailerId, setTrailerId] = useState(null);
     const [loadingTrailer, setLoadingTrailer] = useState(false);
     const topRef = useRef(null);
@@ -69,8 +69,6 @@ const MovieModal = ({ movie, onMovieSelect }) => {
         fetchRecommendedMovies();
     }, [movie]);
 
-    // Fetch trailer ONLY for users who are NOT signed in (public users)
-    // Signed-in users (even if not approved) should not see trailers
     useEffect(() => {
         if (!user && !isContributor && movie) {
             setLoadingTrailer(true);
@@ -90,33 +88,30 @@ const MovieModal = ({ movie, onMovieSelect }) => {
         topRef.current.scrollIntoView({ behavior: 'smooth' });
     };
 
-    // Only show streaming URLs for approved contributors
-    const movieEmbedUrl = isContributor
-        ? (useVidKing 
-            ? `https://www.vidking.net/embed/movie/${movie.id}?autoPlay=true&nextEpisode=true&episodeSelector=true`
-            : `https://vidsrc.xyz/embed/movie/${movie.id}`)
-        : null;
-    
+    const getContentUrl = (id, sourceA) => {
+        if (sourceA) {
+            return `https://www.vidking.net/embed/movie/${id}?autoPlay=true&nextEpisode=true&episodeSelector=true`;
+        }
+        return `https://vidsrc.xyz/embed/movie/${id}`;
+    };
+
+    const movieEmbedUrl = isContributor ? getContentUrl(movie.id, useSourceA) : null;
     const trailerUrl = trailerId ? getYouTubeEmbedUrl(trailerId) : null;
 
-    // Listen for VidKing player events to track watch progress
     useEffect(() => {
         const handlePlayerMessage = (event) => {
-            if (!useVidKing || !movie) return;
+            if (!useSourceA || !movie) return;
             
             try {
                 const messageData = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
                 
-                // Check if it's a VidKing player event
                 if (messageData.type === 'PLAYER_EVENT' && messageData.data) {
                     const { event: playerEvent, currentTime, duration } = messageData.data;
                     
-                    // Add to recently watched when playback starts
                     if (playerEvent === 'play' && currentTime < 60) {
                         addMovieId(movie.id);
                     }
                     
-                    // Save progress periodically during playback
                     if (playerEvent === 'timeupdate' && currentTime && duration) {
                         const progressKey = `movieProgress_${movie.id}`;
                         const progressData = {
@@ -130,7 +125,7 @@ const MovieModal = ({ movie, onMovieSelect }) => {
                     }
                 }
             } catch (error) {
-                // Ignore non-JSON messages
+                // Ignore parsing errors
             }
         };
 
@@ -139,7 +134,7 @@ const MovieModal = ({ movie, onMovieSelect }) => {
         return () => {
             window.removeEventListener('message', handlePlayerMessage);
         };
-    }, [useVidKing, movie]);
+    }, [useSourceA, movie]);
 
     return (
         <div className="movie-details-container" ref={topRef}>
@@ -149,7 +144,7 @@ const MovieModal = ({ movie, onMovieSelect }) => {
                 <div style={{ display: 'flex', gap: '10px', marginBottom: '10px', flexWrap: 'wrap' }}>
                     {isContributor && (
                         <button
-                            onClick={() => setUseVidKing(!useVidKing)}
+                            onClick={() => setUseSourceA(!useSourceA)}
                             style={{
                                 backgroundColor: '#f5c518',
                                 color: '#000000',
@@ -160,7 +155,7 @@ const MovieModal = ({ movie, onMovieSelect }) => {
                                 fontWeight: 'bold'
                             }}
                         >
-                            Switch to {useVidKing ? 'VidSrc' : 'VidKing'}
+                            Switch Source
                         </button>
                     )}
                 </div>
@@ -181,7 +176,6 @@ const MovieModal = ({ movie, onMovieSelect }) => {
                             }}
                         />
                     ) : user ? (
-                        // Signed in but not approved - show waiting message
                         <div style={{
                             display: 'flex',
                             alignItems: 'center',
@@ -199,7 +193,6 @@ const MovieModal = ({ movie, onMovieSelect }) => {
                             </div>
                         </div>
                     ) : (
-                        // Public user (not signed in) - show trailer
                         <>
                             {loadingTrailer ? (
                                 <div style={{

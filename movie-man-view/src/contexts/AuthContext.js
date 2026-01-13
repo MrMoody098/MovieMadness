@@ -99,7 +99,6 @@ export const AuthProvider = ({ children }) => {
 
       if (error) throw error;
 
-      // Create contributor record with pending approval
       if (data.user) {
         const { error: contributorError } = await supabase
           .from('contributors')
