@@ -91,6 +91,44 @@ body {
     color: #ddd;
 }
 
+.auth-button {
+    background: linear-gradient(135deg, #f5c518 0%, #d4a017 100%);
+    color: #000000;
+    border: none;
+    border-radius: 20px;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.auth-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(245, 197, 24, 0.4);
+}
+
+.sign-out-button {
+    background: #dc3545;
+    color: white;
+}
+
+.sign-out-button:hover {
+    background: #c82333;
+    box-shadow: 0 4px 8px rgba(220, 53, 69, 0.4);
+}
+
+.contributor-badge {
+    font-size: 18px;
+    margin: 0 5px;
+    cursor: default;
+}
+
+.admin-link {
+    color: #f5c518 !important;
+    font-weight: bold;
+}
+
 .search-bar {
     width: 40%;
     padding: 10px 15px;

@@ -1,0 +1,148 @@
+.admin-panel {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  color: #ffffff;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #1e1e2e 0%, #2d2d44 100%);
+}
+
+.admin-panel h1 {
+  color: #f5c518;
+  margin-bottom: 2rem;
+  font-size: 2rem;
+}
+
+.admin-panel h2 {
+  color: #e0e0e0;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+}
+
+.access-denied,
+.loading {
+  text-align: center;
+  padding: 3rem;
+  color: #b0b0b0;
+}
+
+.message {
+  padding: 1rem;
+  border-radius: 6px;
+  margin-bottom: 1.5rem;
+  font-weight: 500;
+}
+
+.message.success {
+  background: #28a745;
+  color: white;
+}
+
+.message.error {
+  background: #dc3545;
+  color: white;
+}
+
+.contributors-section {
+  margin-bottom: 3rem;
+}
+
+.contributors-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.contributor-card {
+  background: #2a2a3e;
+  border: 2px solid #3a3a5c;
+  border-radius: 8px;
+  padding: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: border-color 0.2s;
+}
+
+.contributor-card:hover {
+  border-color: #5a5a7a;
+}
+
+.contributor-card.approved {
+  border-color: #28a745;
+}
+
+.contributor-info h3 {
+  margin: 0 0 0.5rem 0;
+  color: #f5c518;
+  font-size: 1.2rem;
+}
+
+.contributor-info .email {
+  color: #b0b0b0;
+  margin: 0.25rem 0;
+}
+
+.contributor-info .date {
+  color: #808080;
+  font-size: 0.9rem;
+  margin: 0.25rem 0 0 0;
+}
+
+.contributor-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.approve-button,
+.reject-button,
+.revoke-button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.approve-button {
+  background: #28a745;
+  color: white;
+}
+
+.approve-button:hover {
+  background: #218838;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+}
+
+.reject-button {
+  background: #dc3545;
+  color: white;
+}
+
+.reject-button:hover {
+  background: #c82333;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+}
+
+.revoke-button {
+  background: #ffc107;
+  color: #000000;
+}
+
+.revoke-button:hover {
+  background: #e0a800;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(255, 193, 7, 0.3);
+}
+
+.empty-state {
+  color: #808080;
+  text-align: center;
+  padding: 2rem;
+  background: #2a2a3e;
+  border-radius: 8px;
+  border: 2px dashed #3a3a5c;
+}

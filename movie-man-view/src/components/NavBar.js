@@ -1,12 +1,14 @@
 // src/components/NavBar.js
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import '../App.css';
 
 const NavBar = ({ onSearch, isModalOpen }) => {
   const [show, setShow] = useState(true);
   const [query, setQuery] = useState('');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { user, isContributor, isAdmin, signOut } = useAuth();
 
   let lastScrollY = window.pageYOffset;
 
@@ -72,6 +74,22 @@ const NavBar = ({ onSearch, isModalOpen }) => {
             <Link to="/movies">Movies</Link>
             <Link to="/tv-shows">TV Shows</Link>
             <Link to="/filter">Filter</Link>
+            {user ? (
+              <>
+                {isContributor && (
+                  <span className="contributor-badge" title="Approved Contributor">⭐</span>
+                )}
+                {isAdmin && (
+                  <Link to="/admin" className="admin-link">Admin</Link>
+                )}
+                <button 
+                  className="auth-button sign-out-button"
+                  onClick={signOut}
+                >
+                  Sign Out
+                </button>
+              </>
+            ) : null}
           </div>
         </div>
       </div>

@@ -53,10 +53,14 @@ const MoviesList = () => {
         setRecentlyWatched(movieDetails.map(response => response.data));
 
         // Fetch recommendations based on recently watched movies
+        // Note: This requires a backend server running on localhost:8000
+        // If not available, the app will work fine without recommendations
         try {
             const response = await axios.post('http://localhost:8000/recommend', {
                 watched_movie_indices: movieIds,
                 top_k: 10
+            }, {
+                timeout: 3000 // 3 second timeout
             });
             const recommendedIds = response.data.recommended_movie_ids;
             const recommendedDetails = await Promise.all(
@@ -67,7 +71,11 @@ const MoviesList = () => {
             );
             setRecommendedMovies(recommendedDetails);
         } catch (error) {
-            console.error('Error fetching recommendations:', error);
+            // Silently fail - backend recommendation service is optional
+            // The app works fine without it, using TMDb recommendations instead
+            if (error.code !== 'ERR_NETWORK' && error.code !== 'ECONNREFUSED') {
+                console.warn('Recommendation service error:', error.message);
+            }
         }
     };
 
@@ -165,12 +173,12 @@ const MoviesList = () => {
                         onMouseUp={endDrag}
                         onMouseLeave={endDrag}
                     >
-                        {recentlyWatched.map((movie) => {
+                        {recentlyWatched.map((movie, index) => {
                             const progress = getMovieProgress(movie.id);
                             return (
                                 <div
                                     className={`movie-card ${deleteMode ? 'delete-mode' : ''} ${selectedForDeletion.includes(movie.id) ? 'selected' : ''} ${animateCard === movie.id ? 'animate' : ''}`}
-                                    key={movie.id}
+                                    key={`recent-${movie.id}-${index}`}
                                     onClick={() => handleMovieSelect(movie)}
                                 >
                                     <div className="movie-poster">
@@ -201,8 +209,8 @@ const MoviesList = () => {
                 <div className="recently-watched">
                     <h2>Recommended Movies</h2>
                     <div className="carousel">
-                        {recommendedMovies.map((movie) => (
-                            <div className="movie-card" key={movie.id} onClick={() => handleMovieSelect(movie)}>
+                        {recommendedMovies.map((movie, index) => (
+                            <div className="movie-card" key={`recommended-${movie.id}-${index}`} onClick={() => handleMovieSelect(movie)}>
                                 <div className="movie-poster">
                                     <img src={`https://image.tmdb.org/t/p/w500/${movie.poster_path}`} alt={movie.title}/>
                                 </div>
@@ -223,8 +231,8 @@ const MoviesList = () => {
 
             <div className="movie-title"><h2>Trending Movies</h2></div>
             <div className="movies-container">
-                {movies.map((movie) => (
-                    <div className="movie-card" key={movie.id} onClick={() => handleMovieSelect(movie)}>
+                {movies.map((movie, index) => (
+                    <div className="movie-card" key={`movie-${movie.id}-${index}`} onClick={() => handleMovieSelect(movie)}>
                         <div className="movie-poster">
                             <img src={movie.poster} alt={movie.title}/>
                         </div>

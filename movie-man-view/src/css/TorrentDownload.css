@@ -1,0 +1,365 @@
+/* Torrent Download Modal Styles */
+
+.torrent-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+}
+
+.torrent-modal {
+    background: #1a1a1a;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 800px;
+    max-height: 90vh;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+}
+
+.torrent-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #333;
+    background: #2a2a2a;
+}
+
+.torrent-modal-header h2 {
+    margin: 0;
+    color: #fff;
+    font-size: 1.5rem;
+}
+
+.torrent-close-btn {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background-color 0.2s;
+}
+
+.torrent-close-btn:hover {
+    background-color: #444;
+}
+
+.torrent-modal-content {
+    padding: 20px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.torrent-search-info {
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #2a2a2a;
+    border-radius: 8px;
+    border-left: 4px solid #f5c518;
+}
+
+.torrent-search-info p {
+    margin: 5px 0;
+    color: #ccc;
+}
+
+.torrent-search-info strong {
+    color: #fff;
+}
+
+/* Active Downloads Section */
+.active-downloads {
+    margin-bottom: 30px;
+}
+
+.active-downloads h3 {
+    color: #f5c518;
+    margin-bottom: 15px;
+    font-size: 1.2rem;
+}
+
+.download-item {
+    background: #2a2a2a;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 10px;
+    border: 1px solid #444;
+}
+
+.download-info h4 {
+    margin: 0 0 10px 0;
+    color: #fff;
+    font-size: 1rem;
+}
+
+.download-progress {
+    margin-bottom: 10px;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: #444;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 5px;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #f5c518, #e6b800);
+    transition: width 0.3s ease;
+}
+
+.progress-text {
+    color: #ccc;
+    font-size: 0.9rem;
+}
+
+.download-stats {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+}
+
+.download-stats span {
+    color: #aaa;
+    font-size: 0.85rem;
+}
+
+.download-controls {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.download-pause-btn,
+.download-resume-btn,
+.download-cancel-btn {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: background-color 0.2s;
+}
+
+.download-pause-btn {
+    background: #ff9500;
+    color: white;
+}
+
+.download-pause-btn:hover {
+    background: #e6860a;
+}
+
+.download-resume-btn {
+    background: #28a745;
+    color: white;
+}
+
+.download-resume-btn:hover {
+    background: #218838;
+}
+
+.download-cancel-btn {
+    background: #dc3545;
+    color: white;
+}
+
+.download-cancel-btn:hover {
+    background: #c82333;
+}
+
+.download-completed {
+    color: #28a745;
+    font-weight: bold;
+    text-align: center;
+    padding: 10px;
+}
+
+.download-error {
+    color: #dc3545;
+    font-weight: bold;
+    text-align: center;
+    padding: 10px;
+}
+
+/* Torrent List */
+.torrent-loading,
+.torrent-no-results {
+    text-align: center;
+    padding: 40px;
+    color: #ccc;
+    font-size: 1.1rem;
+}
+
+.torrent-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.torrent-item {
+    background: #2a2a2a;
+    border-radius: 8px;
+    padding: 15px;
+    border: 1px solid #444;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background-color 0.2s;
+}
+
+.torrent-item:hover {
+    background: #333;
+}
+
+.torrent-info {
+    flex: 1;
+}
+
+.torrent-title {
+    margin: 0 0 8px 0;
+    color: #fff;
+    font-size: 1rem;
+    line-height: 1.4;
+}
+
+.torrent-details {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.torrent-size,
+.torrent-seeds,
+.torrent-peers,
+.torrent-provider {
+    color: #aaa;
+    font-size: 0.85rem;
+}
+
+.torrent-download-btn {
+    background: #f5c518;
+    color: #000;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.2s;
+    white-space: nowrap;
+}
+
+.torrent-download-btn:hover:not(:disabled) {
+    background: #e6b800;
+}
+
+.torrent-download-btn:disabled {
+    background: #666;
+    cursor: not-allowed;
+}
+
+/* Modal Footer */
+.torrent-modal-footer {
+    padding: 20px;
+    border-top: 1px solid #333;
+    background: #2a2a2a;
+    display: flex;
+    justify-content: center;
+}
+
+.torrent-refresh-btn {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.2s;
+}
+
+.torrent-refresh-btn:hover:not(:disabled) {
+    background: #0056b3;
+}
+
+.torrent-refresh-btn:disabled {
+    background: #666;
+    cursor: not-allowed;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .torrent-modal {
+        width: 95%;
+        max-height: 95vh;
+    }
+
+    .torrent-modal-header,
+    .torrent-modal-content,
+    .torrent-modal-footer {
+        padding: 15px;
+    }
+
+    .torrent-item {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .torrent-download-btn {
+        align-self: flex-end;
+        width: fit-content;
+    }
+
+    .download-controls {
+        justify-content: center;
+    }
+
+    .download-stats {
+        justify-content: center;
+        text-align: center;
+    }
+
+    .torrent-details {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .torrent-modal-overlay {
+        padding: 10px;
+    }
+
+    .torrent-details {
+        flex-direction: column;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .download-stats {
+        flex-direction: column;
+        gap: 5px;
+    }
+}

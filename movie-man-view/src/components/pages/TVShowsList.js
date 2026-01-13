@@ -134,14 +134,14 @@ const TVShowsList = () => {
                     onMouseUp={endDrag}
                     onMouseLeave={endDrag}
                 >
-                    {recentlyWatchedTv.map((tvShow) => {
+                    {recentlyWatchedTv.map((tvShow, index) => {
                         const progressData = getShowProgress(tvShow.id);
                         const progress = progressData?.progressPercentage || 0;
                         const seasonEpisode = progressData ? `S${progressData.lastWatchedSeason} E${progressData.lastWatchedEpisode}` : '';
                         return (
                             <div
                                 className={`movie-card ${deleteMode ? 'delete-mode' : ''} ${selectedForDeletion.includes(tvShow.id) ? 'selected' : ''} ${animateCard === tvShow.id ? 'animate' : ''}`}
-                                key={tvShow.id}
+                                key={`recent-${tvShow.id}-${index}`}
                                 onClick={() => handleTvShowSelect(tvShow)}
                             >
                                 <div className="movie-poster">
@@ -175,8 +175,8 @@ const TVShowsList = () => {
 
             <div className="movie-title"><h2>TV Shows</h2></div>
             <div className="movies-container">
-                {tvShows.map((tvShow) => (
-                    <div className="movie-card" key={tvShow.id} onClick={() => handleTvShowSelect(tvShow)}>
+                {tvShows.map((tvShow, index) => (
+                    <div className="movie-card" key={`tvshow-${tvShow.id}-${index}`} onClick={() => handleTvShowSelect(tvShow)}>
                         <div className="movie-poster">
                             <img src={tvShow.poster} alt={tvShow.name} />
                         </div>

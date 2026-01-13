@@ -5,16 +5,21 @@ import '../css/TvModal.css';
 import '../css/MoviesList.css';
 import { addTvShowId } from '../utils/recentlyWatchedTv';
 import { saveWatchProgress } from '../../utils/watchProgress';
+import { useAuth } from '../../contexts/AuthContext';
+import { getTvTrailer, getYouTubeEmbedUrl } from '../../utils/trailerService';
 
 const API_KEY = 'f58bf4f31de2a8346b5841b863457b1f';
 
 const TvModal = ({ isOpen, onRequestClose, tvShow, onTvShowSelect }) => {
+    const { user, isContributor } = useAuth();
     const [episodeUrl, setEpisodeUrl] = useState('');
     const [seasonNumber, setSeasonNumber] = useState(1);
     const [episodeNumber, setEpisodeNumber] = useState(1);
     const [totalSeasons, setTotalSeasons] = useState(1);
     const [totalEpisodes, setTotalEpisodes] = useState(1);
     const [useVidKing, setUseVidKing] = useState(true);
+    const [trailerId, setTrailerId] = useState(null);
+    const [loadingTrailer, setLoadingTrailer] = useState(false);
     const topRef = useRef(null);
     const videoRef = useRef(null);
 
@@ -52,8 +57,24 @@ const TvModal = ({ isOpen, onRequestClose, tvShow, onTvShowSelect }) => {
         fetchSeasonDetails();
     }, [tvShow, seasonNumber]);
 
+    // Fetch trailer ONLY for users who are NOT signed in (public users)
+    // Signed-in users (even if not approved) should not see trailers
     useEffect(() => {
-        if (tvShow && seasonNumber <= totalSeasons && episodeNumber <= totalEpisodes) {
+        if (!user && !isContributor && tvShow) {
+            setLoadingTrailer(true);
+            getTvTrailer(tvShow.id).then((videoId) => {
+                setTrailerId(videoId);
+                setLoadingTrailer(false);
+            }).catch(() => {
+                setLoadingTrailer(false);
+            });
+        } else {
+            setTrailerId(null);
+        }
+    }, [tvShow, isContributor, user]);
+
+    useEffect(() => {
+        if (isContributor && tvShow && seasonNumber <= totalSeasons && episodeNumber <= totalEpisodes) {
             const episodeEmbedUrl = useVidKing
                 ? `https://www.vidking.net/embed/tv/${tvShow.id}/${seasonNumber}/${episodeNumber}?autoPlay=true&nextEpisode=true&episodeSelector=true`
                 : `https://vidsrc.xyz/embed/tv?tmdb=${tvShow.id}&season=${seasonNumber}&episode=${episodeNumber}`;
@@ -61,7 +82,7 @@ const TvModal = ({ isOpen, onRequestClose, tvShow, onTvShowSelect }) => {
         } else {
             setEpisodeUrl('');
         }
-    }, [tvShow, seasonNumber, episodeNumber, totalSeasons, totalEpisodes, useVidKing]);
+    }, [tvShow, seasonNumber, episodeNumber, totalSeasons, totalEpisodes, useVidKing, isContributor]);
 
     // Listen for VidKing player events to sync episode changes and track watch progress
     useEffect(() => {
@@ -141,23 +162,26 @@ const TvModal = ({ isOpen, onRequestClose, tvShow, onTvShowSelect }) => {
                     <button onClick={onRequestClose}>Close</button>
                     <h2>{tvShow.name} - Season {seasonNumber} Episode {episodeNumber}</h2>
                     <p className="movie-description">{tvShow.overview}</p>
-                    <button 
-                        onClick={() => setUseVidKing(!useVidKing)}
-                        style={{
-                            backgroundColor: '#f5c518',
-                            color: '#000000',
-                            border: 'none',
-                            borderRadius: '5px',
-                            padding: '10px 20px',
-                            cursor: 'pointer',
-                            marginBottom: '10px',
-                            fontWeight: 'bold'
-                        }}
-                    >
-                        Switch to {useVidKing ? 'VidSrc' : 'VidKing'}
-                    </button>
+                    <div style={{ display: 'flex', gap: '10px', marginBottom: '10px', flexWrap: 'wrap' }}>
+                        {isContributor && (
+                            <button
+                                onClick={() => setUseVidKing(!useVidKing)}
+                                style={{
+                                    backgroundColor: '#f5c518',
+                                    color: '#000000',
+                                    border: 'none',
+                                    borderRadius: '5px',
+                                    padding: '10px 20px',
+                                    cursor: 'pointer',
+                                    fontWeight: 'bold'
+                                }}
+                            >
+                                Switch to {useVidKing ? 'VidSrc' : 'VidKing'}
+                            </button>
+                        )}
+                    </div>
 
-                    {episodeUrl && (
+                    {isContributor && episodeUrl ? (
                         <div style={{position: 'relative', width: '100%', height: '500px', overflow: 'hidden'}}>
                             <iframe
                                 ref={videoRef}
@@ -174,27 +198,93 @@ const TvModal = ({ isOpen, onRequestClose, tvShow, onTvShowSelect }) => {
                                 }}
                             ></iframe>
                         </div>
+                    ) : user ? (
+                        // Signed in but not approved - show waiting message
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            height: '500px',
+                            color: '#ffffff',
+                            backgroundColor: '#1a1a1a',
+                            borderRadius: '8px'
+                        }}>
+                            <div style={{ textAlign: 'center' }}>
+                                <p>Your account is pending approval</p>
+                                <p style={{ fontSize: '0.9rem', color: '#999', marginTop: '10px' }}>
+                                    Please wait for admin approval to access content
+                                </p>
+                            </div>
+                        </div>
+                    ) : (
+                        // Public user (not signed in) - show trailer
+                        <>
+                            {loadingTrailer ? (
+                                <div style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    height: '500px',
+                                    color: '#ffffff'
+                                }}>
+                                    Loading trailer...
+                                </div>
+                            ) : trailerId ? (
+                                <div style={{position: 'relative', width: '100%', height: '500px', overflow: 'hidden'}}>
+                                    <iframe
+                                        src={getYouTubeEmbedUrl(trailerId)}
+                                        title="TV Show Trailer"
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                        allowFullScreen
+                                        style={{
+                                            position: 'absolute',
+                                            top: 0,
+                                            left: 0,
+                                            width: '100%',
+                                            height: '100%',
+                                            border: 'none'
+                                        }}
+                                    />
+                                </div>
+                            ) : (
+                                <div style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    height: '500px',
+                                    color: '#ffffff',
+                                    backgroundColor: '#1a1a1a',
+                                    borderRadius: '8px'
+                                }}>
+                                    <div style={{ textAlign: 'center' }}>
+                                        <p>No trailer available for this show</p>
+                                    </div>
+                                </div>
+                            )}
+                        </>
                     )}
 
-                    <div className="controls">
-                        <label>
-                            Select Season:
-                            <select value={seasonNumber} onChange={(e) => setSeasonNumber(Number(e.target.value))}>
-                                {Array.from({ length: totalSeasons }, (_, i) => i + 1).map(season => (
-                                    <option key={season} value={season}>{season}</option>
-                                ))}
-                            </select>
-                        </label>
+                    {isContributor && (
+                        <div className="controls">
+                            <label>
+                                Select Season:
+                                <select value={seasonNumber} onChange={(e) => setSeasonNumber(Number(e.target.value))}>
+                                    {Array.from({ length: totalSeasons }, (_, i) => i + 1).map(season => (
+                                        <option key={season} value={season}>{season}</option>
+                                    ))}
+                                </select>
+                            </label>
 
-                        <label>
-                            Select Episode:
-                            <select value={episodeNumber} onChange={(e) => setEpisodeNumber(Number(e.target.value))}>
-                                {Array.from({ length: totalEpisodes }, (_, i) => i + 1).map(episode => (
-                                    <option key={episode} value={episode}>{episode}</option>
-                                ))}
-                            </select>
-                        </label>
-                    </div>
+                            <label>
+                                Select Episode:
+                                <select value={episodeNumber} onChange={(e) => setEpisodeNumber(Number(e.target.value))}>
+                                    {Array.from({ length: totalEpisodes }, (_, i) => i + 1).map(episode => (
+                                        <option key={episode} value={episode}>{episode}</option>
+                                    ))}
+                                </select>
+                            </label>
+                        </div>
+                    )}
                 </div>
             )}
         </Modal>

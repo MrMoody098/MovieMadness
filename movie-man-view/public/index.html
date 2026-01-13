@@ -25,6 +25,27 @@
       Learn how to configure a non-root public URL by running `npm run build`.
     -->
     <title>React App</title>
+    <script>
+      // Polyfill global for WebTorrent (must run before any modules load)
+      (function() {
+        if (typeof global === 'undefined') {
+          var globalValue;
+          if (typeof globalThis !== 'undefined') {
+            globalValue = globalThis;
+          } else if (typeof window !== 'undefined') {
+            globalValue = window;
+          } else if (typeof self !== 'undefined') {
+            globalValue = self;
+          }
+          // Set it on window and as a global variable
+          window.global = globalValue;
+          // Also try to set it as a true global (works in some contexts)
+          try {
+            this.global = globalValue;
+          } catch(e) {}
+        }
+      })();
+    </script>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
