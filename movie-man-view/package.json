@@ -2,6 +2,7 @@
   "name": "movie-man-view",
   "version": "0.1.0",
   "private": true,
+  "homepage": "https://mrmoody098.github.io/MovieMadness",
   "dependencies": {
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
