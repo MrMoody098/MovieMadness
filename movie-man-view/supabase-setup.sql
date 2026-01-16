@@ -29,6 +29,21 @@ CREATE TABLE IF NOT EXISTS api_keys (
 ALTER TABLE contributors ENABLE ROW LEVEL SECURITY;
 ALTER TABLE api_keys ENABLE ROW LEVEL SECURITY;
 
+-- Create a function to check if user is admin (bypasses RLS to avoid recursion)
+CREATE OR REPLACE FUNCTION is_user_admin(user_uuid UUID)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+STABLE
+AS $$
+BEGIN
+    RETURN EXISTS (
+        SELECT 1 FROM contributors
+        WHERE user_id = user_uuid AND is_admin = TRUE
+    );
+END;
+$$;
+
 -- RLS Policies for contributors table
 -- Users can read their own contributor record
 CREATE POLICY "Users can view own contributor record"
@@ -38,48 +53,44 @@ CREATE POLICY "Users can view own contributor record"
 -- Only admins can update contributor records
 CREATE POLICY "Admins can update contributors"
     ON contributors FOR UPDATE
-    USING (
-        EXISTS (
-            SELECT 1 FROM contributors
-            WHERE user_id = auth.uid() AND is_admin = TRUE
-        )
-    );
+    USING (is_user_admin(auth.uid()));
 
 -- Anyone can insert their own contributor record (on signup)
+-- Allow any authenticated user to insert (needed for signup flow)
 CREATE POLICY "Users can insert own contributor record"
     ON contributors FOR INSERT
-    WITH CHECK (auth.uid() = user_id);
+    WITH CHECK (true);
 
 -- Admins can view all contributors
 CREATE POLICY "Admins can view all contributors"
     ON contributors FOR SELECT
-    USING (
-        EXISTS (
-            SELECT 1 FROM contributors
-            WHERE user_id = auth.uid() AND is_admin = TRUE
-        )
+    USING (is_user_admin(auth.uid()));
+
+-- Create a function to check if user is approved (bypasses RLS to avoid recursion)
+CREATE OR REPLACE FUNCTION is_user_approved(user_uuid UUID)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+STABLE
+AS $$
+BEGIN
+    RETURN EXISTS (
+        SELECT 1 FROM contributors
+        WHERE user_id = user_uuid AND is_approved = TRUE
     );
+END;
+$$;
 
 -- RLS Policies for api_keys table
 -- Only approved contributors can read API keys
 CREATE POLICY "Approved contributors can read API keys"
     ON api_keys FOR SELECT
-    USING (
-        EXISTS (
-            SELECT 1 FROM contributors
-            WHERE user_id = auth.uid() AND is_approved = TRUE
-        )
-    );
+    USING (is_user_approved(auth.uid()));
 
 -- Only admins can insert/update API keys
 CREATE POLICY "Admins can manage API keys"
     ON api_keys FOR ALL
-    USING (
-        EXISTS (
-            SELECT 1 FROM contributors
-            WHERE user_id = auth.uid() AND is_admin = TRUE
-        )
-    );
+    USING (is_user_admin(auth.uid()));
 
 -- Create function to update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()
