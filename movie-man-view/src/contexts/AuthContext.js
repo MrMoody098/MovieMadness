@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
-import { supabase, isApprovedContributor, isAdmin } from '../utils/supabase';
+import { supabase, isApprovedContributor, isAdmin, testDatabaseConnection } from '../utils/supabase';
 
 const AuthContext = createContext({});
 
@@ -28,6 +28,11 @@ export const AuthProvider = ({ children }) => {
   const isSigningInRef = useRef(false);
 
   useEffect(() => {
+    // Quick diagnostic: do we see any DB connectivity at all?
+    testDatabaseConnection().then((res) => {
+      console.log('DB connectivity diagnostic:', res);
+    });
+
     // Get initial session
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       console.log('Initial session check:', session?.user?.id || 'No session');
@@ -35,11 +40,17 @@ export const AuthProvider = ({ children }) => {
         // Check if user is approved before allowing them to stay signed in
         const isApproved = await isApprovedContributor(session.user.id);
         console.log('Initial session approval check:', isApproved);
-        if (!isApproved) {
+        if (isApproved === false) {
           // Sign out non-approved users automatically
           console.log('Initial session: User not approved, signing out');
           await supabase.auth.signOut();
           setUser(null);
+          setIsContributor(false);
+          setIsUserAdmin(false);
+        } else if (isApproved === null) {
+          // Can't verify right now (timeout / connectivity). Keep session, but restrict privileges.
+          console.warn('Initial session: Unable to verify approval (timeout/connectivity). Keeping session but disabling contributor/admin flags.');
+          setUser(session.user);
           setIsContributor(false);
           setIsUserAdmin(false);
         } else {
@@ -72,11 +83,16 @@ export const AuthProvider = ({ children }) => {
         const isApproved = await isApprovedContributor(session.user.id);
         console.log('Auth state change: Approval status', isApproved);
         
-        if (!isApproved) {
+        if (isApproved === false) {
           // Sign out non-approved users automatically
           console.log('Auth state change: User not approved, signing out');
           await supabase.auth.signOut();
           setUser(null);
+          setIsContributor(false);
+          setIsUserAdmin(false);
+        } else if (isApproved === null) {
+          console.warn('Auth state change: Unable to verify approval (timeout/connectivity). Keeping session but disabling contributor/admin flags.');
+          setUser(session.user);
           setIsContributor(false);
           setIsUserAdmin(false);
         } else {
@@ -99,12 +115,13 @@ export const AuthProvider = ({ children }) => {
   const checkContributorStatus = async (userId) => {
     const approved = await isApprovedContributor(userId);
     const admin = await isAdmin(userId);
-    setIsContributor(approved);
+    setIsContributor(approved === true);
     setIsUserAdmin(admin);
   };
 
   const signUp = async (email, password, displayName) => {
     try {
+      console.log('Starting signup process...');
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -115,32 +132,73 @@ export const AuthProvider = ({ children }) => {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Auth signup error:', error);
+        throw error;
+      }
+
+      console.log('Auth signup successful, user ID:', data.user?.id);
 
       if (data.user) {
-        const { data: contributorData, error: contributorError } = await supabase
-          .from('contributors')
-          .insert({
-            user_id: data.user.id,
-            email: email,
-            display_name: displayName,
-            is_approved: false,
-            is_admin: false,
-            created_at: new Date().toISOString(),
-          })
-          .select();
-
-        if (contributorError) {
-          console.error('Error creating contributor record:', contributorError);
-          // Return the error so it can be displayed to the user
-          return { data: null, error: { message: `Account created but failed to set up profile: ${contributorError.message}` } };
-        }
+        console.log('User created successfully, user ID:', data.user.id);
         
-        console.log('Contributor record created:', contributorData);
+        // Wait a moment for the database trigger to create the contributor record
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Try to verify if contributor record was created (by trigger or manually)
+        // This is non-blocking - if it fails, the trigger should have created it
+        try {
+          console.log('Checking if contributor record exists...');
+          const { data: existingRecord, error: checkError } = await supabase
+            .from('contributors')
+            .select('id, display_name')
+            .eq('user_id', data.user.id)
+            .maybeSingle();
+          
+          if (existingRecord) {
+            console.log('Contributor record found (created by trigger or already exists):', existingRecord);
+          } else if (checkError) {
+            console.warn('Could not check for existing record:', checkError);
+          } else {
+            console.log('No contributor record found yet, attempting manual insert...');
+            
+            // Try manual insert as fallback (only if trigger didn't fire)
+            const { data: contributorData, error: contributorError } = await supabase
+              .from('contributors')
+              .insert({
+                user_id: data.user.id,
+                email: email,
+                display_name: displayName,
+                is_approved: false,
+                is_admin: false,
+                created_at: new Date().toISOString(),
+              })
+              .select();
+            
+            if (contributorError) {
+              // Check if it's a duplicate error (trigger already created it)
+              if (contributorError.code === '23505' || contributorError.message?.includes('duplicate') || contributorError.message?.includes('unique')) {
+                console.log('Contributor record already exists (likely created by trigger)');
+              } else {
+                console.warn('Manual insert failed (trigger should have created it):', contributorError);
+                // Don't fail signup if insert fails - trigger should handle it
+              }
+            } else {
+              console.log('Contributor record created manually:', contributorData);
+            }
+          }
+        } catch (insertErr) {
+          console.warn('Error checking/creating contributor record (non-blocking):', insertErr);
+          // Don't fail signup - the trigger should have created the record
+        }
+      } else {
+        console.warn('No user data returned from signup');
       }
 
       return { data, error: null };
     } catch (error) {
+      console.error('Signup exception:', error);
+      console.error('Full error:', JSON.stringify(error, null, 2));
       return { data: null, error };
     }
   };
@@ -180,7 +238,16 @@ export const AuthProvider = ({ children }) => {
         const isApproved = await isApprovedContributor(data.user.id);
         console.log('Approval status:', isApproved);
         
-        if (!isApproved) {
+        if (isApproved === null) {
+          console.warn('Unable to verify approval during sign-in (timeout/connectivity). Keeping session but marking as not contributor.');
+          await checkContributorStatus(data.user.id);
+          setUser(data.user);
+          await new Promise(resolve => setTimeout(resolve, 500));
+          isSigningInRef.current = false;
+          return { data, error: null };
+        }
+
+        if (isApproved === false) {
           console.log('User not approved, signing out...');
           // Check if user has a contributor record at all
           const { data: contributorData, error: contributorError } = await supabase
