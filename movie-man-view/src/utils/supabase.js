@@ -21,6 +21,9 @@ export const isApprovedContributor = async (userId) => {
   try {
     console.log('Checking approval for user:', userId);
     
+    // Small delay to ensure session is fully established after sign-in
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
     // Add timeout to prevent hanging
     const timeoutPromise = new Promise((_, reject) => 
       setTimeout(() => reject(new Error('Approval check timeout')), 10000)
@@ -34,15 +37,22 @@ export const isApprovedContributor = async (userId) => {
     
     const { data, error } = await Promise.race([queryPromise, timeoutPromise]);
     
-    console.log('Approval check result:', { data, error });
+    console.log('Approval check result:', { data, error, errorCode: error?.code, errorMessage: error?.message });
     
     if (error) {
       console.error('Error checking approval:', error);
-      // If record doesn't exist, user is not approved
+      // If record doesn't exist (PGRST116), user is not approved
       if (error.code === 'PGRST116') {
         console.log('Contributor record does not exist');
         return false;
       }
+      // If RLS policy blocks access, log it but still return false
+      if (error.code === 'PGRST301' || error.message?.includes('permission denied') || error.message?.includes('RLS')) {
+        console.error('RLS policy blocked approval check. User may not have a contributor record or RLS is misconfigured.');
+        return false;
+      }
+      // For other errors, log details and return false
+      console.error('Unexpected error checking approval:', error);
       return false;
     }
     

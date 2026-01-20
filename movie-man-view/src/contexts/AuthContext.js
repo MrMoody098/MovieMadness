@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { supabase, isApprovedContributor, isAdmin } from '../utils/supabase';
 
 const AuthContext = createContext({});
@@ -25,15 +25,19 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [isContributor, setIsContributor] = useState(false);
   const [isUserAdmin, setIsUserAdmin] = useState(false);
+  const isSigningInRef = useRef(false);
 
   useEffect(() => {
     // Get initial session
     supabase.auth.getSession().then(async ({ data: { session } }) => {
+      console.log('Initial session check:', session?.user?.id || 'No session');
       if (session?.user) {
         // Check if user is approved before allowing them to stay signed in
         const isApproved = await isApprovedContributor(session.user.id);
+        console.log('Initial session approval check:', isApproved);
         if (!isApproved) {
           // Sign out non-approved users automatically
+          console.log('Initial session: User not approved, signing out');
           await supabase.auth.signOut();
           setUser(null);
           setIsContributor(false);
@@ -53,21 +57,35 @@ export const AuthProvider = ({ children }) => {
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state change event:', event, 'User:', session?.user?.id || 'None', 'isSigningIn:', isSigningInRef.current);
+      
+      // Don't interfere if we're in the middle of a sign-in process
+      if (isSigningInRef.current && event === 'SIGNED_IN') {
+        console.log('Sign-in in progress, skipping auth state change handler');
+        return;
+      }
+      
       if (session?.user) {
         // Check if user is approved before allowing them to stay signed in
+        console.log('Auth state change: Checking approval for', session.user.id);
         const isApproved = await isApprovedContributor(session.user.id);
+        console.log('Auth state change: Approval status', isApproved);
+        
         if (!isApproved) {
           // Sign out non-approved users automatically
+          console.log('Auth state change: User not approved, signing out');
           await supabase.auth.signOut();
           setUser(null);
           setIsContributor(false);
           setIsUserAdmin(false);
         } else {
+          console.log('Auth state change: User approved, setting user state');
           setUser(session.user);
           await checkContributorStatus(session.user.id);
         }
       } else {
+        console.log('Auth state change: No session, clearing user state');
         setUser(null);
         setIsContributor(false);
         setIsUserAdmin(false);
@@ -128,6 +146,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const signIn = async (email, password) => {
+    isSigningInRef.current = true;
     try {
       console.log('Starting sign in...');
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -137,12 +156,25 @@ export const AuthProvider = ({ children }) => {
 
       if (error) {
         console.error('Sign in error:', error);
+        isSigningInRef.current = false;
         throw error;
       }
 
       console.log('Sign in successful, user:', data.user?.id);
 
       if (data.user) {
+        // Wait a moment for session to be fully established
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        // Verify session is active
+        const { data: sessionData } = await supabase.auth.getSession();
+        console.log('Session after sign-in:', sessionData.session ? 'Active' : 'Missing');
+        
+        if (!sessionData.session) {
+          isSigningInRef.current = false;
+          throw new Error('Session not established. Please try again.');
+        }
+        
         // Check if user is approved before allowing sign in
         console.log('Checking approval status...');
         const isApproved = await isApprovedContributor(data.user.id);
@@ -150,19 +182,45 @@ export const AuthProvider = ({ children }) => {
         
         if (!isApproved) {
           console.log('User not approved, signing out...');
+          // Check if user has a contributor record at all
+          const { data: contributorData, error: contributorError } = await supabase
+            .from('contributors')
+            .select('id, is_approved')
+            .eq('user_id', data.user.id)
+            .maybeSingle();
+          
+          console.log('Contributor record check:', { contributorData, contributorError });
+          
           // Sign them out immediately if not approved
           await supabase.auth.signOut();
-          throw new Error('Please wait for account approval before signing in.');
+          isSigningInRef.current = false;
+          
+          if (!contributorData && !contributorError) {
+            throw new Error('Account not found. Please contact support or create a new account.');
+          } else if (contributorError) {
+            throw new Error(`Unable to verify account status: ${contributorError.message}. Please contact support.`);
+          } else {
+            throw new Error('Please wait for account approval before signing in.');
+          }
         }
 
         console.log('User approved, checking contributor status...');
         await checkContributorStatus(data.user.id);
-        console.log('Sign in complete');
+        
+        // Set user state directly to avoid race condition with listener
+        setUser(data.user);
+        
+        console.log('Sign in complete, user state set');
+        
+        // Wait a bit more before clearing the flag to let the listener know we handled it
+        await new Promise(resolve => setTimeout(resolve, 500));
+        isSigningInRef.current = false;
       }
 
       return { data, error: null };
     } catch (error) {
       console.error('Sign in failed:', error);
+      isSigningInRef.current = false;
       return { data: null, error };
     }
   };
