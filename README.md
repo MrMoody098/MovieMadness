@@ -1,4 +1,4 @@
-# 🎬 MovieMadness
+# MovieMadness
 
 A React app to browse trending movies and TV shows with trailers from The Movie Database (TMDb).
 
@@ -6,7 +6,7 @@ A React app to browse trending movies and TV shows with trailers from The Movie 
 
 ---
 
-## 🚀 Quick Start (Running in Cursor or Your Computer)
+## Quick Start (Running in Cursor or Your Computer)
 
 ### Step 1: Open the Project in Cursor
 
@@ -47,11 +47,11 @@ The app will automatically open in your browser at:
 
 If it doesn't open automatically, just copy that address into your browser.
 
-**🎉 That's it! The app is running!**
+** That's it! The app is running!**
 
 ---
 
-## 🛑 How to Stop the App
+## How to Stop the App
 
 In the terminal where it's running:
 - Press **Ctrl + C** (hold Ctrl and press C)
@@ -59,7 +59,7 @@ In the terminal where it's running:
 
 ---
 
-## ⚙️ What You Need Installed
+## What You Need Installed
 
 Before starting, make sure you have:
 
@@ -70,7 +70,7 @@ That's all you need!
 
 ---
 
-## 🔑 Getting a Movie Database API Key (Optional)
+## Getting a Movie Database API Key (Optional)
 
 The app uses the TMDb API to get movie data. To get your own API key:
 
@@ -86,7 +86,7 @@ To use it in the app:
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 MovieMadness/
@@ -102,7 +102,7 @@ MovieMadness/
 
 ---
 
-## 🆘 Troubleshooting
+## Troubleshooting
 
 ### "npm: command not found" or "node: command not found"
 → You need to install Node.js from https://nodejs.org
@@ -118,7 +118,7 @@ MovieMadness/
 
 ---
 
-## 🐳 Want to Use Docker Instead?
+## Want to Use Docker Instead?
 
 If you want to run this app in a Docker container, see [DOCKER_README.md](DOCKER_README.md)
 
@@ -126,37 +126,12 @@ Docker is great for deployment but not necessary for local development.
 
 ---
 
-## 🎯 Features
+## Features
 
-- ✅ Browse trending movies and TV shows
-- ✅ Search for movies by title
-- ✅ Watch trailers
-- ✅ View movie details, ratings, and descriptions
-- ✅ Modern, responsive design
-
----
-
-## 🤝 Contributing
-
-Want to improve this app?
-
-1. Make your changes
-2. Test them by running `npm start`
-3. Submit a pull request on GitHub
+-  Browse trending movies and TV shows
+-  Search for movies by title
+-  Watch trailers
+-  View movie details, ratings, and desriptions
+-  Modern, responsive design
 
 ---
-
-## 📝 License
-
-Open source - feel free to use and modify!
-
----
-
-## 🙏 Credits
-
-- **TMDb API** - Movie data and images
-- **React** - Frontend framework
-
----
-
-**Need help? Open an issue on GitHub!**
