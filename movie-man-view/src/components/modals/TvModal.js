@@ -56,7 +56,7 @@ const TvModal = ({ isOpen, onRequestClose, tvShow, onTvShowSelect }) => {
         if (tvShow && seasonNumber <= totalSeasons && episodeNumber <= totalEpisodes) {
             const episodeEmbedUrl = useVidKing
                 ? `https://www.vidking.net/embed/tv/${tvShow.id}/${seasonNumber}/${episodeNumber}?autoPlay=true&nextEpisode=true&episodeSelector=true`
-                : `https://vidsrc.xyz/embed/tv?tmdb=${tvShow.id}&season=${seasonNumber}&episode=${episodeNumber}`;
+                : `https://vidsrc.to/embed/tv/${tvShow.id}/${seasonNumber}/${episodeNumber}`;
             setEpisodeUrl(episodeEmbedUrl);
         } else {
             setEpisodeUrl('');

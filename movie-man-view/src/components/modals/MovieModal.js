@@ -63,7 +63,7 @@ const MovieModal = ({ movie, onMovieSelect }) => {
 
     const movieEmbedUrl = useVidKing 
         ? `https://www.vidking.net/embed/movie/${movie.id}?autoPlay=true&nextEpisode=true&episodeSelector=true`
-        : `https://vidsrc.xyz/embed/movie/${movie.id}`;
+        : `https://vidsrc.to/embed/movie/${movie.id}`;
 
     // Listen for VidKing player events to track watch progress
     useEffect(() => {
