@@ -10,6 +10,7 @@ export default function HistorySection({ type, onSelect }) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [deleteMode, setDeleteMode] = useState(false);
+    const [showHistory, setShowHistory] = useState(false);
     const [selected, setSelected] = useState([]);
     const [, setStorageVersion] = useState(0);
     const ids = JSON.stringify(type ? getHistoryIds(type).map(id => ({ id, type })) :
@@ -56,20 +57,27 @@ export default function HistorySection({ type, onSelect }) {
         setSelected([]);
         setDeleteMode(false);
     };
-    return <section className="recently-watched">
-        {continuing.length > 0 && <><h2>Continue Watching</h2><div className="carousel">{continuing.map(item =>
-            <MediaCard key={`${item.media_type}:${item.id}`} item={item} type={item.media_type} onSelect={onSelect} />)}</div></>}
-        <h2>Recently Watched{type === 'tv' ? ' TV Shows' : type === 'movie' ? ' Movies' : ''}</h2>
-        {loading && <p role="status">Loading viewing history…</p>}
+    if (ids === '[]') return null;
+    const showContinue = continuing.length > 0 && !showHistory && !deleteMode;
+    const displayedItems = showContinue ? continuing : sortedItems;
+    return <section className="catalog-section">
+        <div className="section-heading">
+            <h2>{showContinue ? 'Continue watching' : 'Recently watched'}</h2>
+            <div className="section-actions">
+                {continuing.length > 0 && !deleteMode && <button className="text-button" onClick={() => setShowHistory(value => !value)}>
+                    {showContinue ? 'View history' : 'Continue watching'}</button>}
+                <button className="text-button" onClick={() => { setDeleteMode(value => !value); setSelected([]); }}>
+                    {deleteMode ? 'Cancel' : 'Manage'}</button>
+            </div>
+        </div>
+        {loading && <p className="muted" role="status">Loading viewing history…</p>}
         {error && <div role="alert"><p>{error}</p><button onClick={() => setVersion(value => value + 1)}>Retry history</button></div>}
-        {!loading && !error && sortedItems.length === 0 && <p>Mark a title as watching or watched to add it here.</p>}
-        {sortedItems.length > 0 && <>
-            <button onClick={() => { setDeleteMode(value => !value); setSelected([]); }}>{deleteMode ? 'Cancel' : 'Remove from history'}</button>
-            {deleteMode && <><button onClick={() => setSelected(selected.length === sortedItems.length ? [] : sortedItems.map(item => `${item.media_type}:${item.id}`))}>
+        {deleteMode && <div className="history-actions">
+            <button className="secondary" onClick={() => setSelected(selected.length === sortedItems.length ? [] : sortedItems.map(item => `${item.media_type}:${item.id}`))}>
                 {selected.length === sortedItems.length ? 'Deselect all' : 'Select all'}</button>
-                <button onClick={remove} disabled={!selected.length}>Remove selected</button></>}
-            <div className="carousel">{sortedItems.map(item => <MediaCard key={`${item.media_type}:${item.id}`} item={item}
-                type={item.media_type} onSelect={select} selectionMode={deleteMode} selected={selected.includes(`${item.media_type}:${item.id}`)} />)}</div>
-        </>}
+            <button className="secondary" onClick={remove} disabled={!selected.length}>Remove selected{selected.length ? ` (${selected.length})` : ''}</button>
+        </div>}
+        <div className="carousel">{displayedItems.map(item => <MediaCard key={`${item.media_type}:${item.id}`} item={item}
+            type={item.media_type} onSelect={select} selectionMode={deleteMode} selected={selected.includes(`${item.media_type}:${item.id}`)} />)}</div>
     </section>;
 }

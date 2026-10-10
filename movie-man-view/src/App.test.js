@@ -5,6 +5,7 @@ import { MemoryRouter, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import App from './App';
 import NavBar from './components/NavBar';
+import MoviesList from './components/pages/MoviesList';
 import Filter from './components/pages/Filter';
 import ExploreAll from './components/pages/ExploreAll';
 import MovieModal from './components/modals/MovieModal';
@@ -55,7 +56,7 @@ function Location() {
 
 test('renders the movie site and opens titles without marking them watched', async () => {
     await act(async () => { render(<App />); });
-    expect(screen.getByRole('heading', { name: 'Trending Movies' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Movies' })).toBeInTheDocument();
     const movieCard = await screen.findByRole('button', { name: 'Open Test Movie' });
     await act(async () => { fireEvent.click(movieCard); });
     expect(await screen.findByTitle('Watch Test Movie')).toBeInTheDocument();
@@ -105,13 +106,13 @@ test('failed requests show a recoverable error', async () => {
     await screen.findByText('Test Movie');
 });
 
-test('navigation searches both media types and labels its menu', async () => {
+test('navigation searches both media types and keeps browse links visible', async () => {
     await act(async () => { render(<MemoryRouter><NavBar /><Location /></MemoryRouter>); });
     fireEvent.change(screen.getByRole('combobox', { name: 'Search movies and TV shows' }), { target: { value: 'A & B' } });
     fireEvent.submit(screen.getByRole('search'));
     expect(screen.getByTestId('location')).toHaveTextContent('/search?q=A%20%26%20B');
-    fireEvent.click(screen.getByRole('button', { name: 'Open navigation menu' }));
-    expect(screen.getByRole('button', { name: 'Close navigation menu' })).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByRole('link', { name: 'Movies' })).toHaveAttribute('href', '/movies');
+    expect(screen.getByRole('link', { name: 'TV Shows' })).toHaveAttribute('href', '/tv-shows');
 });
 
 test('unified search ignores people and opens TV results', async () => {
@@ -183,8 +184,9 @@ test('VidSrc is the only player and untrusted messages cannot change history', a
     act(() => { window.dispatchEvent(new MessageEvent('message', { origin: 'https://evil.example', source: frame.contentWindow,
         data: { type: 'PLAYER_EVENT', data: { event: 'play', currentTime: 100, duration: 1000 } } })); });
     expect(getHistoryIds('movie')).toEqual([]);
-    fireEvent.click(screen.getByRole('button', { name: 'I’m watching' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Continue later' }));
     expect(getHistoryIds('movie')).toEqual([12]);
+    screen.getByText('Save a playback position').closest('details').open = true;
     fireEvent.change(screen.getByLabelText('Position (minutes)'), { target: { value: '5' } });
     fireEvent.change(screen.getByLabelText('Duration (minutes)'), { target: { value: '100' } });
     fireEvent.submit(screen.getByRole('button', { name: 'Save position' }).closest('form'));
@@ -206,7 +208,7 @@ test('TV Continue Watching restores the saved episode and saves explicit checkpo
     await waitFor(() => expect(screen.getByLabelText('Select episode')).not.toBeDisabled());
     expect(screen.getByLabelText('Select episode')).toHaveValue('1');
     expect(screen.getByTitle('Test Show — S3E1').src).toBe('https://vidsrc.to/embed/tv/34/3/1');
-    fireEvent.click(screen.getByRole('button', { name: 'I’m watching' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Continue later' }));
     expect(getShowProgress(34)).toMatchObject({ lastWatchedSeason: 3, lastWatchedEpisode: 1, status: 'watching' });
     expect(getHistoryIds('tv')).toEqual([34]);
 });
@@ -248,4 +250,58 @@ test('search suggestions cancel obsolete requests and support pointer selection'
     expect(screen.queryByText('Old Suggestion')).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /New Suggestion/ }));
     expect(screen.getByTestId('location')).toHaveTextContent('/search?q=New%20Suggestion');
+});
+
+
+test.each(['movie', 'tv'])('%s automatically loads the next page and resets when changing collections', async type => {
+    let intersect;
+    const disconnect = jest.fn();
+    window.IntersectionObserver = jest.fn(callback => {
+        intersect = callback;
+        return { observe: jest.fn(), disconnect };
+    });
+    axios.get.mockImplementation((url, { params }) => Promise.resolve(response([
+        { ...movie, id: params.page, title: `Page ${params.page}` }
+    ], 2)));
+    try {
+        await act(async () => { render(<MemoryRouter><MoviesList type={type} /><Location /></MemoryRouter>); });
+        await screen.findByRole('button', { name: 'Open Page 1' });
+        expect(screen.queryByRole('button', { name: /load more/i })).not.toBeInTheDocument();
+        await act(async () => { intersect([{ isIntersecting: true }]); intersect([{ isIntersecting: true }]); });
+        await screen.findByRole('button', { name: 'Open Page 2' });
+        expect(axios.get.mock.calls.map(([, config]) => config.params.page)).toEqual([1, 2]);
+        expect(screen.getByRole('button', { name: 'Open Page 1' })).toBeInTheDocument();
+        expect(screen.getByText('You’ve reached the end.')).toBeInTheDocument();
+        expect(disconnect).toHaveBeenCalled();
+        await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Top rated' })); });
+        await waitFor(() => expect(axios.get.mock.calls.at(-1)[0]).toContain(`/${type}/top_rated`));
+        expect(axios.get.mock.calls.at(-1)[1].params.page).toBe(1);
+        expect(screen.queryByRole('button', { name: 'Open Page 2' })).not.toBeInTheDocument();
+        expect(screen.getByTestId('location')).toHaveTextContent('view=top_rated');
+    } finally {
+        delete window.IntersectionObserver;
+    }
+});
+
+test('infinite loading retains existing titles after failure and retries the same page', async () => {
+    let intersect;
+    window.IntersectionObserver = jest.fn(callback => {
+        intersect = callback;
+        return { observe: jest.fn(), disconnect: jest.fn() };
+    });
+    axios.get.mockResolvedValueOnce(response([movie], 2))
+        .mockRejectedValueOnce(new Error('Offline'))
+        .mockResolvedValueOnce(response([{ ...movie, id: 13, title: 'Next Movie' }], 2));
+    try {
+        await act(async () => { render(<MemoryRouter><MoviesList /></MemoryRouter>); });
+        await screen.findByRole('button', { name: 'Open Test Movie' });
+        await act(async () => { intersect([{ isIntersecting: true }]); });
+        expect(await screen.findByRole('alert')).toHaveTextContent('Titles could not be loaded');
+        expect(screen.getByRole('button', { name: 'Open Test Movie' })).toBeInTheDocument();
+        await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Try again' })); });
+        await screen.findByRole('button', { name: 'Open Next Movie' });
+        expect(axios.get.mock.calls.map(([, config]) => config.params.page)).toEqual([1, 2, 2]);
+    } finally {
+        delete window.IntersectionObserver;
+    }
 });

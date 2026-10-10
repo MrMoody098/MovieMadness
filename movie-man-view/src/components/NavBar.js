@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { NavLink, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
+import { NavLink, useNavigate, useSearchParams } from 'react-router-dom';
 import '../App.css';
+import Icon from './Icon';
 import { fetchTmdb, isCanceled } from '../utils/tmdb';
 
 const NavBar = ({ isModalOpen = false }) => {
     const [params] = useSearchParams();
     const [query, setQuery] = useState(params.get('q') || '');
-    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [suggestions, setSuggestions] = useState([]);
     const [suggestionState, setSuggestionState] = useState('');
     const [focused, setFocused] = useState(false);
@@ -14,10 +14,8 @@ const NavBar = ({ isModalOpen = false }) => {
     const formRef = useRef(null);
     const suggestionsRef = useRef(null);
     const navigate = useNavigate();
-    const location = useLocation();
     const urlQuery = params.get('q') || '';
     useEffect(() => { setQuery(urlQuery); }, [urlQuery]);
-    useEffect(() => { setIsMobileMenuOpen(false); }, [location.pathname, location.search]);
     useEffect(() => {
         const controller = new AbortController();
         setSuggestions([]);
@@ -66,24 +64,31 @@ const NavBar = ({ isModalOpen = false }) => {
     };
     return <nav className="navbar visible" aria-label="Main navigation" hidden={isModalOpen}>
         <div className="navbar-content">
-            <NavLink className="logo" to="/">MovieMan</NavLink>
+            <NavLink className="logo" to="/" aria-label="MovieMan home">Movie<span>Man</span></NavLink>
+            <div className="nav-links">
+                <NavLink to="/explore">Explore</NavLink><NavLink to="/movies">Movies</NavLink>
+                <NavLink to="/tv-shows">TV shows</NavLink><NavLink to="/filter">Filters</NavLink>
+                <NavLink to="/watchlist">Watchlist</NavLink>
+            </div>
             <form ref={formRef} className="search-form" role="search" onSubmit={handleSearch}
                 onBlur={event => { if (!formRef.current?.contains(event.relatedTarget)) setFocused(false); }}>
                 <label className="visually-hidden" htmlFor="site-search">Search movies and TV shows</label>
-                <input id="site-search" type="search" className="search-bar" placeholder="Search movies and TV…"
+                <input id="site-search" type="search" className="search-bar" placeholder="Search movies & TV"
                     role="combobox" aria-autocomplete="list" aria-expanded={showSuggestions}
                     aria-controls="search-suggestions" aria-activedescendant={showSuggestions && activeSuggestion >= 0 ? `search-suggestion-${activeSuggestion}` : undefined}
                     autoComplete="off" value={query} onFocus={() => setFocused(true)} onKeyDown={handleSearchKey}
                     onChange={event => { setQuery(event.target.value); setFocused(true); }} />
-                <button type="submit">Search</button>
+                <button type="submit" className="search-submit" aria-label="Search"><Icon name="search" size={18} /></button>
                 {showSuggestions && <div className="search-suggestions">
                     <ul ref={suggestionsRef} id="search-suggestions" role="listbox" aria-label="Suggested movies and TV shows">
                         {suggestions.map((item, index) => <li key={`${item.media_type}:${item.id}`} role="option"
                             id={`search-suggestion-${index}`} aria-selected={activeSuggestion === index}>
                             <button type="button" tabIndex={-1} onMouseDown={event => event.preventDefault()}
                                 onClick={() => search(item.title || item.name)}>
-                                <span>{item.title || item.name}</span>
-                                <small>{item.media_type === 'tv' ? 'TV show' : 'Movie'}{typeof (item.release_date || item.first_air_date) === 'string' && (item.release_date || item.first_air_date) ? ` · ${(item.release_date || item.first_air_date).slice(0, 4)}` : ''}</small>
+                                <img className="suggestion-poster" src={item.poster_path ? `https://image.tmdb.org/t/p/w92${item.poster_path}` : '/default-poster.svg'} alt="" width="32" height="48"
+                                    onError={event => { if (!event.currentTarget.src.endsWith('/default-poster.svg')) event.currentTarget.src = '/default-poster.svg'; }} />
+                                <span className="suggestion-copy"><span>{item.title || item.name}</span>
+                                <small>{item.media_type === 'tv' ? 'TV show' : 'Movie'}{typeof (item.release_date || item.first_air_date) === 'string' && (item.release_date || item.first_air_date) ? ` · ${(item.release_date || item.first_air_date).slice(0, 4)}` : ''}</small></span>
                             </button>
                         </li>)}
                     </ul>
@@ -92,16 +97,7 @@ const NavBar = ({ isModalOpen = false }) => {
                     {suggestionState === 'error' && <p role="status">Suggestions unavailable. You can still submit your search.</p>}
                 </div>}
             </form>
-            <button className="mobile-menu-button" onClick={() => setIsMobileMenuOpen(open => !open)}
-                aria-label={isMobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
-                aria-expanded={isMobileMenuOpen} aria-controls="navigation-links">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18" /></svg>
-            </button>
-            <div id="navigation-links" className={`nav-links ${isMobileMenuOpen ? 'open' : ''}`}>
-                <NavLink to="/explore">Explore</NavLink><NavLink to="/movies">Movies</NavLink>
-                <NavLink to="/tv-shows">TV Shows</NavLink><NavLink to="/filter">Filter</NavLink>
-                <NavLink to="/watchlist">Watchlist</NavLink>
-            </div>
+
         </div>
     </nav>;
 };

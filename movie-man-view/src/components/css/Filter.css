@@ -1,5 +1,15 @@
-.filter-container { color: var(--text); }
-.filter-header { display: flex; flex-wrap: wrap; gap: 16px; padding: 20px; max-width: 1100px; margin: auto; align-items: end; justify-content: center; }
-.filter-header label { display: flex; flex-direction: column; gap: 8px; text-align: left; width: 220px; max-width: 100%; }
-.filter-header select, .filter-header input { padding: 10px; border-radius: 8px; border: 1px solid var(--accent); background: var(--nav); color: var(--text); width: 100%; }
+.filter-header { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px; }
+.filter-header label { display: flex; flex-direction: column; gap: 8px; color: var(--muted); font-size: 12px; min-width: 0; }
+.filter-header select, .filter-header input { padding: 10px 12px; border-radius: 5px; border: 1px solid var(--border); background: var(--surface); color: var(--text); width: 100%; min-width: 0; font-size: 14px; }
 .filter-header input::placeholder { color: var(--muted); }
+.advanced-filters { border-bottom: 1px solid var(--border); margin: 12px 0 30px; padding-bottom: 18px; }
+.advanced-filters summary { width: fit-content; color: var(--muted); font-size: 13px; cursor: pointer; padding: 10px 0; }
+.advanced-filters[open] summary { margin-bottom: 14px; color: var(--text); }
+.advanced-filters .filter-header { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 1000px) { .filter-header { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 600px) {
+    .filter-header, .advanced-filters .filter-header { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 12px; }
+    .filter-container .page-heading { align-items: flex-start; }
+    .filter-container .page-heading h1 { font-size: 30px; }
+    .filter-container .page-heading .text-button { font-size: 12px; white-space: nowrap; }
+}

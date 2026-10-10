@@ -7,6 +7,7 @@ import { getShowProgress } from '../../utils/watchProgress';
 import { fetchTmdb, isCanceled } from '../../utils/tmdb';
 import WatchlistButton from '../WatchlistButton';
 import ProgressControls from '../ProgressControls';
+import Icon from '../Icon';
 
 export default function TvModal({ isOpen, onRequestClose, tvShow }) {
     const [saved] = useState(() => tvShow ? getShowProgress(tvShow.id) : null);
@@ -48,18 +49,18 @@ export default function TvModal({ isOpen, onRequestClose, tvShow }) {
     if (!tvShow) return null;
     const selectedEpisode = episodes.items.find(item => item.episode_number === selection.episode);
     return <Modal isOpen={isOpen} onRequestClose={onRequestClose} contentLabel="TV show episode">
-        <button onClick={onRequestClose}>Close</button>
+        <button className="modal-close icon-button" onClick={onRequestClose} aria-label="Close"><Icon name="close" /></button>
         <div className="movie-details-container">
-            <h2>{tvShow.name} — Season {selection.season} Episode {selection.episode}</h2>
+            <header className="detail-heading"><h2>{tvShow.name}</h2>
+                <div className="detail-meta"><span>TV show</span><span>Season {selection.season}, episode {selection.episode}</span>
+                    {Number.isFinite(tvShow.vote_average) && tvShow.vote_average > 0 && <span className="rating"><Icon name="star" size={14} />{tvShow.vote_average.toFixed(1)}</span>}
+                </div>
+            </header>
             <p className="movie-description">{typeof tvShow.overview === 'string' && tvShow.overview ? tvShow.overview : 'No description available.'}</p>
             <div className="detail-actions"><WatchlistButton item={tvShow} type="tv" /></div>
             {error && <div role="alert"><p>{error}</p><button onClick={() => setAttempt(value => value + 1)}>Retry show details</button></div>}
             {!totalSeasons && !error && <p role="status">Loading show details…</p>}
             {totalSeasons > 0 && <>
-                {!playerLoaded && <p role="status">Loading player…</p>}
-                <div className="player-frame"><iframe title={`${tvShow.name} — S${selection.season}E${selection.episode}`}
-                    src={`https://vidsrc.to/embed/tv/${id}/${selection.season}/${selection.episode}`}
-                    allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen onLoad={() => setPlayerLoaded(true)} /></div>
                 <div className="controls">
                     <label>Select season<select value={selection.season} onChange={event => changeSelection({ season: Number(event.target.value), episode: 1 })}>
                         {Array.from({ length: totalSeasons }, (_, index) => <option key={index + 1} value={index + 1}>{index + 1}</option>)}
@@ -69,6 +70,11 @@ export default function TvModal({ isOpen, onRequestClose, tvShow }) {
                         {episodes.season !== selection.season ? <option value={selection.episode}>Loading episodes…</option> : episodes.items.map(item => <option key={item.episode_number} value={item.episode_number}>{item.episode_number}{item.name ? ` — ${item.name}` : ''}</option>)}
                     </select></label>
                 </div>
+                {!playerLoaded && <p role="status">Loading player…</p>}
+                <div className="player-frame"><iframe title={`${tvShow.name} — S${selection.season}E${selection.episode}`}
+                    src={`https://vidsrc.to/embed/tv/${id}/${selection.season}/${selection.episode}`}
+                    allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen onLoad={() => setPlayerLoaded(true)} /></div>
+
                 <ProgressControls key={`${selection.season}:${selection.episode}:${selectedEpisode?.runtime || ''}`} id={id} type="tv"
                     season={selection.season} episode={selection.episode} runtime={selectedEpisode?.runtime} />
             </>}

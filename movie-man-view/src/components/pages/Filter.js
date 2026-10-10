@@ -56,29 +56,36 @@ export default function Filter() {
     }, [type, metadataAttempt]);
     const update = (key, value) => {
         const next = new URLSearchParams(params);
-        if (value === '') next.delete(key); else next.set(key, String(value));
+        const numeric = ['year', 'votes', 'minRating', 'maxRating', 'minLength', 'maxLength'].includes(key);
+        if (value === '' && !numeric) next.delete(key); else next.set(key, String(value));
         if (key === 'type') { next.delete('genre'); next.delete('sort'); }
-        setParams(next);
+        setParams(next, { replace: numeric });
     };
     const select = (item, mediaType) => setSelection({ item, type: mediaType });
     return <div className="filter-container">
         <NavBar isModalOpen={Boolean(selection)} />
-        <h1>Discover Your Next Watch</h1>
+        <div className="page-heading"><div><h1>Find your next watch</h1><p>Narrow it down by genre, year, and rating.</p></div>
+            <button className="text-button" onClick={() => setParams({})}>Reset filters</button>
+        </div>
         <div className="filter-header">
             <label>Title type<select value={type} onChange={event => update('type', event.target.value)}><option value="movie">Movies</option><option value="tv">TV Shows</option></select></label>
             <label>Genre<select value={genre} onChange={event => update('genre', event.target.value)}><option value="">All genres</option>{genres.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
             <label>Language<select value={language} onChange={event => update('language', event.target.value)}><option value="">All languages</option>{languages.map(item => <option key={item.iso_639_1} value={item.iso_639_1}>{item.english_name}</option>)}</select></label>
             <label>Sort by<select value={sort} onChange={event => update('sort', event.target.value)}><option value={sortOptions[0]}>Highest rated</option><option value={sortOptions[1]}>Most popular</option><option value={sortOptions[2]}>Newest releases</option></select></label>
-            <label>Release year<input type="number" min="1870" max={new Date().getFullYear() + 5} value={year || ''} placeholder="Any year" onChange={event => update('year', event.target.value)} /></label>
-            <label>Minimum votes<input type="number" min="0" max="1000000" value={minVotes} onChange={event => update('votes', event.target.value)} /></label>
-            <label>Minimum rating<input type="number" min="0" max="10" step="0.1" value={minRating} onChange={event => update('minRating', event.target.value)} /></label>
-            <label>Maximum rating<input type="number" min="0" max="10" step="0.1" value={maxRating} onChange={event => update('maxRating', event.target.value)} /></label>
-            {type === 'movie' && <>
-                <label>Minimum runtime (minutes)<input type="number" min="0" max="300" value={minLength} onChange={event => update('minLength', event.target.value)} /></label>
-                <label>Maximum runtime (minutes)<input type="number" min="0" max="300" value={maxLength} onChange={event => update('maxLength', event.target.value)} /></label>
-            </>}
-            <button onClick={() => setParams({})}>Reset filters</button>
+            <label>Release year<input type="number" min="1870" max={new Date().getFullYear() + 5} value={params.get('year') ?? (year || '')} placeholder="Any year" onChange={event => update('year', event.target.value)} /></label>
+            <label>Minimum rating<input type="number" min="0" max="10" step="0.1" value={params.get('minRating') ?? minRating} onChange={event => update('minRating', event.target.value)} /></label>
         </div>
+        <details className="advanced-filters">
+            <summary>More filters</summary>
+            <div className="filter-header">
+                <label>Minimum votes<input type="number" min="0" max="1000000" value={params.get('votes') ?? minVotes} onChange={event => update('votes', event.target.value)} /></label>
+                <label>Maximum rating<input type="number" min="0" max="10" step="0.1" value={params.get('maxRating') ?? maxRating} onChange={event => update('maxRating', event.target.value)} /></label>
+                {type === 'movie' && <>
+                    <label>Minimum runtime (minutes)<input type="number" min="0" max="300" value={params.get('minLength') ?? minLength} onChange={event => update('minLength', event.target.value)} /></label>
+                    <label>Maximum runtime (minutes)<input type="number" min="0" max="300" value={params.get('maxLength') ?? maxLength} onChange={event => update('maxLength', event.target.value)} /></label>
+                </>}
+            </div>
+        </details>
         {!valid && <p role="alert">Minimum rating and runtime must not exceed their maximum values.</p>}
         {metadataError && <div role="alert"><p>{metadataError}</p><button onClick={() => setMetadataAttempt(value => value + 1)}>Retry filter choices</button></div>}
         <div className="movies-container">{results.items.map(item => <MediaCard key={item.id} item={item} type={type} onSelect={select} />)}</div>

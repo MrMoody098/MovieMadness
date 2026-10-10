@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import NavBar from '../NavBar';
 import Carousel from '../carosel/Carosel';
 import GenreCarousel from '../carosel/GenreCarousel';
@@ -24,17 +24,20 @@ export default function ExploreAll({ searchOnly = false, watchlistOnly = false }
         window.addEventListener('storage', refresh);
         return () => { window.removeEventListener(LIBRARY_EVENT, refresh); window.removeEventListener('storage', refresh); };
     }, []);
-    return <div>
+    return <div className="catalog-page">
         <NavBar isModalOpen={Boolean(selection)} />
-        <h1>{watchlistOnly ? 'Your Watchlist' : searchOnly ? 'Search Movies and TV' : 'Explore'}</h1>
+        <div className="page-heading"><div>
+            <h1>{watchlistOnly ? 'Your watchlist' : searchOnly ? query.trim() ? `Results for “${query.trim()}”` : 'Search' : 'Explore'}</h1>
+            <p>{watchlistOnly ? 'The ones you’re saving for later.' : searchOnly ? 'Movies and TV shows, all in one place.' : 'A little inspiration for your next watch.'}</p>
+        </div></div>
         {watchlistOnly ? <>
-            {!watchlist.length && <p role="status">Save titles from their details to build your watchlist.</p>}
+            {!watchlist.length && <div className="empty-state" role="status"><h2>A good watch starts with a good list.</h2>
+                <p>Save titles from their details to build your watchlist.</p><Link className="button-link" to="/movies">Browse movies</Link></div>}
             <div className="movies-container">{watchlist.map(item =>
                 <MediaCard key={`${item.media_type}:${item.id}`} item={item} type={item.media_type} onSelect={select}>
-                    <button onClick={() => toggleWatchlist(item, item.media_type)} aria-label={`Remove ${item.title || item.name} from watchlist`}>Remove from watchlist</button>
+                    <button className="text-button watchlist-remove" onClick={() => toggleWatchlist(item, item.media_type)} aria-label={`Remove ${item.title || item.name} from watchlist`}>Remove from watchlist</button>
                 </MediaCard>)}</div>
         </> : searchOnly ? <>
-            {query.trim() && <h2>Results for “{query.trim()}”</h2>}
             <div className="movies-container">{results.items.map(item =>
                 <MediaCard key={`${item.media_type}:${item.id}`} item={item} type={item.media_type} onSelect={select} />)}</div>
             <ResultsStatus autoLoad {...results} empty={!results.items.length}

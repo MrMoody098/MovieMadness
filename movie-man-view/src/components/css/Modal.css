@@ -1,4 +1,6 @@
-.ReactModal__Overlay { background: rgba(0, 0, 0, .8) !important; z-index: 2000; }
-.ReactModal__Content { background: var(--surface) !important; color: var(--text) !important; border: 0 !important; border-radius: 10px !important; max-width: 1200px; margin: auto; scrollbar-color: var(--accent) var(--surface); }
-.ReactModal__Content > button { margin-bottom: 12px; }
-@media (max-width: 600px) { .ReactModal__Content { inset: 12px !important; padding: 12px !important; } }
+.ReactModal__Body--open { overflow: hidden; }
+.ReactModal__Overlay { background: rgba(0, 0, 0, .82) !important; z-index: 2000; }
+.ReactModal__Content { background: var(--page) !important; color: var(--text) !important; border: 1px solid var(--border) !important; border-radius: 12px !important; max-width: 1100px; margin: auto; padding: 38px !important; scrollbar-color: #555963 var(--page); }
+.modal-close { position: absolute; top: 16px; right: 16px; border: 0; border-radius: 50%; z-index: 1; }
+@media (max-width: 700px) { .ReactModal__Content { inset: 12px !important; padding: 26px 20px !important; } }
+@media (max-width: 480px) { .ReactModal__Content { inset: 0 !important; border: 0 !important; border-radius: 0 !important; padding: 28px 18px !important; } }

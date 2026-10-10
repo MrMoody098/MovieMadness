@@ -1,31 +1,61 @@
-.movies-container { display: flex; flex-wrap: wrap; gap: 20px; padding: 20px; justify-content: center; width: 100%; }
-.movie-card { position: relative; border-radius: 15px; padding: 15px; width: 240px; max-width: 100%; text-align: center; display: flex; flex-direction: column; gap: 8px; }
-.card-open { display: flex; flex-direction: column; padding: 0; width: 100%; height: 100%; text-align: center; background: transparent; color: var(--text); border-radius: 12px; transition: transform .2s ease; }
-.card-open:hover { transform: translateY(-3px); background: var(--hover); }
-.movie-poster { position: relative; border-radius: 12px; aspect-ratio: 2 / 3; width: 100%; overflow: hidden; }
-.movie-poster img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.movie-details { flex-grow: 1; padding: 8px 4px; color: var(--text); }
-.movie-details h3 { font-size: 1.1rem; margin: 10px 0; overflow-wrap: anywhere; }
-.movie-rating { color: var(--muted); margin: 8px 0; }
-.star-rating { display: flex; justify-content: center; gap: 3px; }
-.star { color: var(--muted); }
-.star.filled { color: var(--accent); }
-.recently-watched { margin: 32px 0; }
-.recently-watched > button { margin: 6px; }
-.carousel { padding: 20px; margin: 0 24px; display: flex; overflow-x: auto; gap: 10px; background: rgba(237, 235, 235, .11); border-radius: 16px; scrollbar-color: var(--accent) var(--surface); }
-.carousel .movie-card { flex: 0 0 190px; }
-.movie-card.selected { background: #39254a; }
-.movie-card.selected .card-open { outline: 3px solid var(--accent); }
-.progress-bar-container { position: absolute; bottom: 0; left: 0; right: 0; height: 5px; background: rgba(255, 255, 255, .3); }
+.movies-container, .loading-grid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 30px 22px;
+}
+.movie-card { position: relative; min-width: 0; display: flex; flex-direction: column; }
+.card-open { display: block; padding: 0; min-height: 0; width: 100%; text-align: left; background: transparent; color: var(--text); border: 0; border-radius: 6px; font-weight: 400; }
+.card-open:hover { background: transparent; }
+.movie-poster { position: relative; aspect-ratio: 2 / 3; width: 100%; overflow: hidden; border-radius: 6px; background: var(--surface); }
+.movie-poster img { width: 100%; height: 100%; object-fit: cover; display: block; transition: opacity .2s ease; }
+.poster-action { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity .2s ease; }
+.poster-action .icon { width: 42px; height: 42px; padding: 10px; background: var(--text); color: var(--page); border-radius: 50%; }
+.card-open:hover .movie-poster img, .card-open:focus-visible .movie-poster img { opacity: .64; }
+.card-open:hover .poster-action, .card-open:focus-visible .poster-action { opacity: 1; }
+.movie-details { padding-top: 11px; }
+.movie-details h3 { font-size: 14px; font-weight: 550; margin: 0 0 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card-meta { display: flex; align-items: center; justify-content: space-between; gap: 8px; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.movie-rating { display: inline-flex; align-items: center; gap: 5px; color: var(--text); }
+.movie-rating .icon { color: var(--accent); }
+.catalog-section { margin: 0 0 36px; }
+.section-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 0 0 16px; }
+.section-heading h2 { margin: 0; }
+.section-actions, .history-actions, .rail-controls { display: flex; gap: 8px; align-items: center; }
+.history-actions { margin-bottom: 16px; }
+.rail-controls .icon-button { min-height: 32px; width: 32px; padding: 6px; border-radius: 50%; }
+.carousel { display: grid; grid-auto-flow: column; grid-auto-columns: calc((100% - 110px) / 6); gap: 22px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity; scrollbar-width: none; padding: 2px 2px 8px; margin: -2px -2px 0; }
+.carousel::-webkit-scrollbar { display: none; }
+.carousel .movie-card { scroll-snap-align: start; }
+.carousel + .results-status .loading-grid { display: none; }
+.carousel + .results-status .loading-status { padding: 16px 0; }
+.movie-card.selected .movie-poster { outline: 3px solid var(--accent); outline-offset: -3px; }
+.movie-card.selected .poster-action { opacity: 1; }
+.progress-bar-container { position: absolute; bottom: 0; inset-inline: 0; height: 3px; background: rgba(0, 0, 0, .65); }
 .progress-bar { width: 100%; height: 100%; background: var(--accent); transform-origin: left; transition: transform .3s ease; }
-.episode-badge { position: absolute; top: 8px; right: 8px; background: rgba(0, 0, 0, .85); color: var(--accent); padding: 5px 8px; border-radius: 5px; font-size: .85rem; }
-@media (max-width: 600px) {
-    .movies-container { gap: 12px; padding: 12px; }
-    .movie-card { width: min(100%, 240px); padding: 8px; }
-    .carousel { margin: 0 12px; padding: 12px; }
-    .carousel .movie-card { flex-basis: 160px; }
+.episode-badge { position: absolute; top: 8px; left: 8px; background: rgba(0, 0, 0, .85); color: var(--text); padding: 4px 7px; border-radius: 3px; font-size: 11px; font-weight: 500; }
+.watchlist-remove { align-self: flex-start; padding: 4px 0; min-height: 32px; font-size: 12px; }
+.poster-skeleton { aspect-ratio: 2 / 3; border-radius: 6px; background: var(--surface); }
+@media (max-width: 1250px) {
+    .movies-container, .loading-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 28px 18px; }
+    .carousel { grid-auto-columns: calc((100% - 72px) / 5); gap: 18px; }
+}
+@media (max-width: 1000px) {
+    .movies-container, .loading-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .carousel { grid-auto-columns: calc((100% - 54px) / 4); }
+}
+@media (max-width: 700px) {
+    .movies-container, .loading-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px 14px; }
+    .carousel { grid-auto-columns: 29%; gap: 14px; }
+    .section-heading h2 { font-size: 19px; }
+}
+@media (max-width: 480px) {
+    .movies-container, .loading-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 14px; }
+    .carousel { grid-auto-columns: 42%; }
+    .movie-details h3 { font-size: 13px; }
+    .section-heading { gap: 8px; }
+    .section-actions { gap: 0; }
+    .section-actions .text-button { font-size: 12px; }
 }
 @media (prefers-reduced-motion: reduce) {
-    .card-open, .progress-bar { transition: none; }
-    .card-open:hover { transform: none; }
+    .movie-poster img, .poster-action, .progress-bar { transition: none; }
 }

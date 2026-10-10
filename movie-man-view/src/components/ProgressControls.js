@@ -37,14 +37,18 @@ export default function ProgressControls({ id, type, season = 1, episode = 1, ru
         }
     };
     return <section className="watch-controls" aria-label="Viewing progress">
-        <div className="detail-actions"><button onClick={() => mark('watching')}>I’m watching</button>
-            <button onClick={() => mark('watched')}>Mark {type === 'tv' ? 'episode' : 'movie'} watched</button></div>
+        <div className="detail-actions"><button className="secondary" onClick={() => mark('watching')}>Continue later</button>
+            <button className="text-button" onClick={() => mark('watched')}>Mark {type === 'tv' ? 'episode' : 'movie'} watched</button></div>
         {matches && saved.watchTime > 0 && saved.progressPercentage < 95 && <p>Saved position: {formatWatchTime(saved.watchTime)}. Use the player controls to resume at this time.</p>}
+        <details className="progress-details">
+            <summary>Save a playback position</summary>
+            <p className="muted">Keep a timestamp to pick up from next time.</p>
         <form className="progress-form" onSubmit={checkpoint}>
             <label>Position (minutes)<input type="number" min="0" step="1" required value={minutes} onChange={event => setMinutes(event.target.value)} /></label>
             <label>Duration (minutes)<input type="number" min="1" step="1" required value={duration} onChange={event => setDuration(event.target.value)} /></label>
             <button type="submit">Save position</button>
         </form>
+        </details>
         {error && <p role="alert">{error}</p>}
         {message && <p role="status">{message}</p>}
     </section>;

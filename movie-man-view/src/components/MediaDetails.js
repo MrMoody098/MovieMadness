@@ -1,4 +1,5 @@
 import React from 'react';
+import Icon from './Icon';
 import Modal from 'react-modal';
 import MovieModal from './modals/MovieModal';
 import TvModal from './modals/TvModal';
@@ -9,7 +10,7 @@ export default function MediaDetails({ selection, onSelect, onClose }) {
     const { item, type } = selection;
     if (type === 'tv') return <TvModal key={`tv:${item.id}`} isOpen onRequestClose={onClose} tvShow={item} />;
     return <Modal isOpen onRequestClose={onClose} contentLabel="Movie details">
-        <button onClick={onClose}>Close</button>
+        <button className="modal-close icon-button" onClick={onClose} aria-label="Close"><Icon name="close" /></button>
         <MovieModal key={`movie:${item.id}`} movie={item} onMovieSelect={movie => onSelect(movie, 'movie')} />
     </Modal>;
 }
