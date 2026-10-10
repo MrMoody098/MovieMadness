@@ -9,22 +9,33 @@ export default function ResultsStatus({ loading, error, retry, hasMore, loadMore
         const target = sentinel.current;
         if (!target) return;
 
+        const preloadDistance = Math.max(1800, window.innerHeight * 3);
+        let previousScrollY = window.scrollY;
+        const preloadWhileScrolling = () => {
+            const movingDown = window.scrollY > previousScrollY;
+            previousScrollY = window.scrollY;
+            if (movingDown && target.getBoundingClientRect().top <= window.innerHeight * 6) loadMore();
+        };
         if (window.IntersectionObserver) {
             const observer = new IntersectionObserver(entries => {
                 if (entries.some(entry => entry.isIntersecting)) loadMore();
-            }, { rootMargin: '600px' });
+            }, { rootMargin: `${preloadDistance}px 0px` });
             observer.observe(target);
-            return () => observer.disconnect();
+            window.addEventListener('scroll', preloadWhileScrolling, { passive: true });
+            return () => {
+                observer.disconnect();
+                window.removeEventListener('scroll', preloadWhileScrolling);
+            };
         }
 
         const checkPosition = () => {
-            if (target.getBoundingClientRect().top <= window.innerHeight + 600) loadMore();
+            if (target.getBoundingClientRect().top <= window.innerHeight + preloadDistance) loadMore();
         };
         checkPosition();
-        window.addEventListener('scroll', checkPosition, { passive: true });
+        window.addEventListener('scroll', preloadWhileScrolling, { passive: true });
         window.addEventListener('resize', checkPosition);
         return () => {
-            window.removeEventListener('scroll', checkPosition);
+            window.removeEventListener('scroll', preloadWhileScrolling);
             window.removeEventListener('resize', checkPosition);
         };
     }, [autoLoad, loading, error, hasMore, loadMore]);

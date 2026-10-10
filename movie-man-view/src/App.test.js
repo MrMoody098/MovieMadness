@@ -377,3 +377,57 @@ test('leaving a page with open details releases the scroll lock', async () => {
     expect(document.body).not.toHaveClass('ReactModal__Body--open');
     expect(document.getElementById('root')).not.toHaveAttribute('aria-hidden', 'true');
 });
+
+test('catalog loading starts several screens ahead and warms incoming poster images', async () => {
+    let intersect;
+    window.IntersectionObserver = jest.fn(callback => {
+        intersect = callback;
+        return { observe: jest.fn(), disconnect: jest.fn() };
+    });
+    const OriginalImage = window.Image;
+    const posters = [];
+    window.Image = jest.fn(() => {
+        const image = {};
+        posters.push(image);
+        return image;
+    });
+    axios.get.mockResolvedValueOnce(response([{ ...movie, poster_path: '/first.jpg' }], 2))
+        .mockResolvedValueOnce(response([{ ...movie, id: 13, title: 'Next Movie', poster_path: '/next.jpg' }], 2));
+    try {
+        await act(async () => { render(<MemoryRouter><MoviesList /></MemoryRouter>); });
+        await screen.findByRole('button', { name: 'Open Test Movie' });
+        expect(window.IntersectionObserver).toHaveBeenLastCalledWith(expect.any(Function), {
+            rootMargin: `${Math.max(1800, window.innerHeight * 3)}px 0px`
+        });
+        expect(posters[0].src).toBe('https://image.tmdb.org/t/p/w342/first.jpg');
+        await act(async () => { intersect([{ isIntersecting: true }]); });
+        await screen.findByRole('button', { name: 'Open Next Movie' });
+        expect(posters[1].src).toBe('https://image.tmdb.org/t/p/w342/next.jpg');
+        expect(axios.get.mock.calls.map(([, config]) => config.params.page)).toEqual([1, 2]);
+    } finally {
+        window.Image = OriginalImage;
+        delete window.IntersectionObserver;
+    }
+});
+
+test('scrolling down fetches ahead before the bottom observer becomes visible', async () => {
+    window.IntersectionObserver = jest.fn(() => ({ observe: jest.fn(), disconnect: jest.fn() }));
+    const originalScrollY = window.scrollY;
+    axios.get.mockResolvedValueOnce(response([movie], 2))
+        .mockResolvedValueOnce(response([{ ...movie, id: 13, title: 'Ready Ahead' }], 2));
+    try {
+        await act(async () => { render(<MemoryRouter><MoviesList /></MemoryRouter>); });
+        await screen.findByRole('button', { name: 'Open Test Movie' });
+        const sentinel = document.querySelector('.results-status');
+        sentinel.getBoundingClientRect = () => ({ top: window.innerHeight * 5 });
+        await act(async () => { fireEvent.scroll(window); });
+        expect(axios.get).toHaveBeenCalledTimes(1);
+        Object.defineProperty(window, 'scrollY', { configurable: true, value: originalScrollY + 100 });
+        await act(async () => { fireEvent.scroll(window); fireEvent.scroll(window); });
+        await screen.findByRole('button', { name: 'Open Ready Ahead' });
+        expect(axios.get.mock.calls.map(([, config]) => config.params.page)).toEqual([1, 2]);
+    } finally {
+        Object.defineProperty(window, 'scrollY', { configurable: true, value: originalScrollY });
+        delete window.IntersectionObserver;
+    }
+});

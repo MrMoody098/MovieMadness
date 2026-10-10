@@ -33,6 +33,13 @@ const useFetchItems = (type, options = {}) => {
                 if (!Array.isArray(data.results)) throw new Error('Invalid results');
                 const incoming = data.results.filter(item => item && Number.isInteger(item.id) && item.id > 0 && typeof (item.title || item.name) === 'string'
                     && (request.type !== 'multi' || ['movie', 'tv'].includes(item.media_type)));
+                // Warm the poster cache while these rows are still ahead of the viewport.
+                incoming.forEach(item => {
+                    if (typeof item.poster_path !== 'string' || !item.poster_path) return;
+                    const poster = new Image();
+                    poster.decoding = 'async';
+                    poster.src = `https://image.tmdb.org/t/p/w342${item.poster_path}`;
+                });
                 setResult(previous => {
                     const items = page === 1 || previous.key !== requestKey ? [] : previous.items;
                     const seen = new Set(items.map(item => `${item.media_type || request.type}:${item.id}`));
