@@ -11,9 +11,9 @@ import Icon from '../Icon';
 import '../css/MoviesList.css';
 import '../css/Explore.css';
 
-function ExploreCatalog({ onSelect }) {
+function ExploreCatalog({ onSelect, animeOnly = false }) {
     const [params, setParams] = useSearchParams();
-    const type = params.get('type') === 'tv' ? 'tv' : 'movie';
+    const type = ['movie', 'tv'].includes(params.get('type')) ? params.get('type') : animeOnly ? 'tv' : 'movie';
     const collection = ['top_rated', 'new'].includes(params.get('collection')) ? params.get('collection') : 'popular';
     const genre = /^\d+$/.test(params.get('genre') || '') ? params.get('genre') : '';
     const [genres, setGenres] = useState({ type: '', items: [], error: false });
@@ -31,7 +31,8 @@ function ExploreCatalog({ onSelect }) {
     }, [type, genreAttempt]);
     const today = new Date().toISOString().slice(0, 10);
     const filters = {
-        ...(genre ? { with_genres: genre } : {}),
+        ...(animeOnly ? { with_genres: genre && genre !== '16' ? `16,${genre}` : '16',
+            with_original_language: 'ja', with_origin_country: 'JP' } : genre ? { with_genres: genre } : {}),
         sort_by: collection === 'top_rated' ? 'vote_average.desc' : collection === 'new'
             ? type === 'tv' ? 'first_air_date.desc' : 'primary_release_date.desc' : 'popularity.desc',
         ...(collection === 'top_rated' ? { 'vote_count.gte': 300 } : {}),
@@ -45,14 +46,14 @@ function ExploreCatalog({ onSelect }) {
         if (key === 'type') next.delete('genre');
         setParams(next);
     };
-    const activeGenres = genres.type === type ? genres.items : [];
+    const activeGenres = genres.type === type ? genres.items.filter(item => !animeOnly || item.id !== 16) : [];
     const genreName = activeGenres.find(item => String(item.id) === genre)?.name;
     const collectionName = collection === 'top_rated' ? 'Top rated' : collection === 'new' ? 'New releases' : 'Popular';
     return <>
         <div className="explore-toolbar">
-            <nav className="browse-tabs" aria-label="Explore media type">
+            <nav className="browse-tabs" aria-label={animeOnly ? 'Anime media type' : 'Explore media type'}>
                 <button aria-pressed={type === 'movie'} onClick={() => update('type', 'movie')}>Movies</button>
-                <button aria-pressed={type === 'tv'} onClick={() => update('type', 'tv')}>TV shows</button>
+                <button aria-pressed={type === 'tv'} onClick={() => update('type', 'tv')}>{animeOnly ? 'Series' : 'TV shows'}</button>
             </nav>
             <label className="explore-sort">Collection
                 <select value={collection} onChange={event => update('collection', event.target.value)}>
@@ -69,13 +70,13 @@ function ExploreCatalog({ onSelect }) {
             <button className="text-button" onClick={() => setGenreAttempt(value => value + 1)}>Retry genres</button></p>}
         <div className="explore-results-heading"><h2>{collectionName}{genreName ? ` · ${genreName}` : ''}</h2>
             <span>{type === 'tv' ? 'TV shows' : 'Movies'}</span></div>
-        <div className="movies-container" aria-label="Explore results">{results.items.map(item =>
+        <div className="movies-container" aria-label={animeOnly ? 'Anime results' : 'Explore results'}>{results.items.map(item =>
             <MediaCard key={`${type}:${item.id}`} item={item} type={type} onSelect={onSelect} />)}</div>
         <ResultsStatus autoLoad {...results} empty={!results.items.length} />
     </>;
 }
 
-export default function ExploreAll({ searchOnly = false, watchlistOnly = false }) {
+export default function ExploreAll({ searchOnly = false, watchlistOnly = false, animeOnly = false }) {
     const [params] = useSearchParams();
     const query = params.get('q') || '';
     const results = useFetchItems('multi', { query, enabled: searchOnly && Boolean(query.trim()) });
@@ -91,9 +92,9 @@ export default function ExploreAll({ searchOnly = false, watchlistOnly = false }
     return <div className="catalog-page">
         <NavBar isModalOpen={Boolean(selection)} />
         <div className="page-heading"><div>
-            <h1>{watchlistOnly ? 'Your watchlist' : searchOnly ? query.trim() ? `Results for “${query.trim()}”` : 'Search' : 'Explore'}</h1>
-            <p>{watchlistOnly ? 'The ones you’re saving for later.' : searchOnly ? 'Movies and TV shows, all in one place.' : 'Find your next watch. Follow a genre, try something new.'}</p>
-        </div>{!watchlistOnly && !searchOnly && <Link className="button-link secondary" to="/filter"><Icon name="filters" size={18} />Advanced filters</Link>}</div>
+            <h1>{watchlistOnly ? 'Your watchlist' : searchOnly ? query.trim() ? `Results for “${query.trim()}”` : 'Search' : animeOnly ? 'Anime' : 'Explore'}</h1>
+            <p>{watchlistOnly ? 'The ones you’re saving for later.' : searchOnly ? 'Movies and TV shows, all in one place.' : animeOnly ? 'Japanese animated series and films. Find your next favourite.' : 'Find your next watch. Follow a genre, try something new.'}</p>
+        </div>{!watchlistOnly && !searchOnly && !animeOnly && <Link className="button-link secondary" to="/filter"><Icon name="filters" size={18} />Advanced filters</Link>}</div>
         {watchlistOnly ? <>
             {!watchlist.length && <div className="empty-state" role="status"><h2>A good watch starts with a good list.</h2>
                 <p>Save titles from their details to build your watchlist.</p><Link className="button-link" to="/movies">Browse movies</Link></div>}
@@ -106,7 +107,7 @@ export default function ExploreAll({ searchOnly = false, watchlistOnly = false }
                 <MediaCard key={`${item.media_type}:${item.id}`} item={item} type={item.media_type} onSelect={select} />)}</div>
             <ResultsStatus autoLoad {...results} empty={!results.items.length}
                 emptyMessage={query.trim() ? 'No matching movies or TV shows. Try another title.' : 'Use the search above to find movies and TV shows.'} />
-        </> : <ExploreCatalog onSelect={select} />}
+        </> : <ExploreCatalog onSelect={select} animeOnly={animeOnly} />}
         <MediaDetails selection={selection} onSelect={select} onClose={() => setSelection(null)} />
     </div>;
 }

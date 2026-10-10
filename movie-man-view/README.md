@@ -26,3 +26,5 @@ Continue Watching restores the saved TV season and episode. VidSrc.to does not d
 Search terms and discovery filters are stored in the URL for sharing and browser navigation.
 
 Explore supports movies and TV, genre discovery, popular titles, top rated titles, and new releases. Explore and the movie/TV catalogs load additional pages automatically as you scroll.
+
+The Anime section at `/anime` browses series and films using TMDB’s Animation genre, Japanese original language, and Japanese origin metadata. Popular, top rated, new releases, and additional genre filters retain these constraints. Classification depends on TMDB metadata.

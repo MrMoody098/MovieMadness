@@ -325,3 +325,25 @@ test('Explore discovers genres, shares filters in the URL, and clears movie genr
         delete window.IntersectionObserver;
     }
 });
+
+test('Anime retains Japanese animation constraints across genres, collections, and movie switching', async () => {
+    window.IntersectionObserver = jest.fn(() => ({ observe: jest.fn(), disconnect: jest.fn() }));
+    try {
+        await act(async () => { render(<MemoryRouter initialEntries={['/anime']}><ExploreAll animeOnly /><Location /></MemoryRouter>); });
+        expect(screen.getByRole('heading', { name: 'Anime', level: 1 })).toBeInTheDocument();
+        expect(screen.getByRole('link', { name: 'Anime' })).toHaveAttribute('href', '/anime');
+        await screen.findByRole('button', { name: 'Action' });
+        const latestDiscover = type => axios.get.mock.calls.filter(([url]) => url.endsWith(`/discover/${type}`)).at(-1)[1].params;
+        expect(latestDiscover('tv')).toMatchObject({ with_genres: '16', with_original_language: 'ja', with_origin_country: 'JP' });
+        await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Action' })); });
+        expect(latestDiscover('tv')).toMatchObject({ with_genres: '16,28', with_original_language: 'ja', with_origin_country: 'JP' });
+        await act(async () => { fireEvent.change(screen.getByLabelText('Collection'), { target: { value: 'top_rated' } }); });
+        expect(latestDiscover('tv')).toMatchObject({ with_genres: '16,28', sort_by: 'vote_average.desc', with_original_language: 'ja' });
+        await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Movies' })); });
+        expect(latestDiscover('movie')).toMatchObject({ with_genres: '16', with_original_language: 'ja', with_origin_country: 'JP', page: 1 });
+        expect(screen.getByTestId('location')).not.toHaveTextContent('genre=');
+        expect(screen.queryByRole('button', { name: /load more/i })).not.toBeInTheDocument();
+    } finally {
+        delete window.IntersectionObserver;
+    }
+});

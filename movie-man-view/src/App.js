@@ -24,7 +24,8 @@ function App() {
             <main id="main-content" tabIndex={-1}>
                 <Routes>
                     <Route path="/" element={<MoviesList />} />
-                    <Route path="/explore" element={<ExploreAll />} />
+                    <Route path="/explore" element={<ExploreAll key="explore" />} />
+                    <Route path="/anime" element={<ExploreAll key="anime" animeOnly />} />
                     <Route path="/search" element={<ExploreAll key="search" searchOnly />} />
                     <Route path="/watchlist" element={<ExploreAll key="watchlist" watchlistOnly />} />
                     <Route path="/movies" element={<MoviesList />} />

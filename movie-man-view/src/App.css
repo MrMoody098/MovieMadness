@@ -109,7 +109,7 @@ h3 { font-size: 16px; font-weight: 550; }
     .nav-links { gap: 18px; }
     .search-form { width: 230px; }
 }
-@media (max-width: 850px) {
+@media (max-width: 1000px) {
     body { padding-top: 116px; }
     .navbar { height: 116px; }
     .navbar-content { display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: 66px 50px; column-gap: 24px; }

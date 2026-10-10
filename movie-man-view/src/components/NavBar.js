@@ -67,7 +67,7 @@ const NavBar = ({ isModalOpen = false }) => {
             <NavLink className="logo" to="/" aria-label="MovieMan home">Movie<span>Man</span></NavLink>
             <div className="nav-links">
                 <NavLink to="/explore">Explore</NavLink><NavLink to="/movies">Movies</NavLink>
-                <NavLink to="/tv-shows">TV shows</NavLink><NavLink to="/filter">Filters</NavLink>
+                <NavLink to="/tv-shows">TV shows</NavLink><NavLink to="/anime">Anime</NavLink><NavLink to="/filter">Filters</NavLink>
                 <NavLink to="/watchlist">Watchlist</NavLink>
             </div>
             <form ref={formRef} className="search-form" role="search" onSubmit={handleSearch}
