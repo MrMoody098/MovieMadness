@@ -1,204 +1,79 @@
-import React, { useEffect, useState, useRef } from 'react';
-import axios from 'axios';
-import Modal from 'react-modal';
+import React, { useEffect, useState } from 'react';
 import '../css/TvModal.css';
 import '../css/MoviesList.css';
-import { addTvShowId } from '../utils/recentlyWatchedTv';
-import { saveWatchProgress } from '../../utils/watchProgress';
+import '../css/MovieModal.css';
+import { getShowProgress } from '../../utils/watchProgress';
+import { fetchTmdb, isCanceled } from '../../utils/tmdb';
+import WatchlistButton from '../WatchlistButton';
+import ProgressControls from '../ProgressControls';
+import Icon from '../Icon';
 
-const API_KEY = 'f58bf4f31de2a8346b5841b863457b1f';
-
-const TvModal = ({ isOpen, onRequestClose, tvShow, onTvShowSelect }) => {
-    const [episodeUrl, setEpisodeUrl] = useState('');
-    const [seasonNumber, setSeasonNumber] = useState(1);
-    const [episodeNumber, setEpisodeNumber] = useState(1);
-    const [totalSeasons, setTotalSeasons] = useState(1);
-    const [totalEpisodes, setTotalEpisodes] = useState(1);
-    const [useVidKing, setUseVidKing] = useState(true);
-    const topRef = useRef(null);
-    const videoRef = useRef(null);
-
+export default function TvModal({ isOpen, tvShow }) {
+    const [saved] = useState(() => tvShow ? getShowProgress(tvShow.id) : null);
+    const [selection, setSelection] = useState({ season: saved?.lastWatchedSeason || 1, episode: saved?.lastWatchedEpisode || 1 });
+    const [totalSeasons, setTotalSeasons] = useState(0);
+    const [episodes, setEpisodes] = useState({ season: 0, items: [] });
+    const [error, setError] = useState('');
+    const [attempt, setAttempt] = useState(0);
+    const [playerLoaded, setPlayerLoaded] = useState(false);
+    const id = tvShow?.id;
     useEffect(() => {
-        const fetchShowDetails = async () => {
-            if (tvShow) {
-                try {
-                    const { data } = await axios.get(
-                        `https://api.themoviedb.org/3/tv/${tvShow.id}?api_key=${API_KEY}`
-                    );
-                    setTotalSeasons(data.number_of_seasons);
-                    setSeasonNumber(1);
-                } catch (error) {
-                    console.error('Error fetching show details:', error);
-                }
-            }
-        };
-        fetchShowDetails();
-    }, [tvShow]);
-
+        if (!id || !isOpen) return;
+        const controller = new AbortController();
+        setError('');
+        fetchTmdb(`tv/${id}`, {}, controller.signal).then(data => {
+            if (controller.signal.aborted) return;
+            if (!Number.isInteger(data.number_of_seasons) || data.number_of_seasons < 1) throw new Error('No seasons');
+            setTotalSeasons(data.number_of_seasons);
+            setSelection(previous => previous.season <= data.number_of_seasons ? previous : { season: 1, episode: 1 });
+        }).catch(failure => { if (!isCanceled(failure, controller.signal)) setError('Show details could not be loaded.'); });
+        return () => controller.abort();
+    }, [id, isOpen, attempt]);
     useEffect(() => {
-        const fetchSeasonDetails = async () => {
-            if (tvShow && seasonNumber > 0 && seasonNumber <= totalSeasons) {
-                try {
-                    const { data } = await axios.get(
-                        `https://api.themoviedb.org/3/tv/${tvShow.id}/season/${seasonNumber}?api_key=${API_KEY}`
-                    );
-                    setTotalEpisodes(data.episodes.length);
-                    setEpisodeNumber(1);
-                } catch (error) {
-                    console.error('Error fetching season details:', error);
-                }
-            }
-        };
-        fetchSeasonDetails();
-    }, [tvShow, seasonNumber]);
-
-    useEffect(() => {
-        if (tvShow && seasonNumber <= totalSeasons && episodeNumber <= totalEpisodes) {
-            const episodeEmbedUrl = useVidKing
-                ? `https://www.vidking.net/embed/tv/${tvShow.id}/${seasonNumber}/${episodeNumber}?autoPlay=true&nextEpisode=true&episodeSelector=true`
-                : `https://vidsrc.xyz/embed/tv?tmdb=${tvShow.id}&season=${seasonNumber}&episode=${episodeNumber}`;
-            setEpisodeUrl(episodeEmbedUrl);
-        } else {
-            setEpisodeUrl('');
-        }
-    }, [tvShow, seasonNumber, episodeNumber, totalSeasons, totalEpisodes, useVidKing]);
-
-    // Listen for VidKing player events to sync episode changes and track watch progress
-    useEffect(() => {
-        const handlePlayerMessage = (event) => {
-            if (!useVidKing || !tvShow) return;
-            
-            try {
-                const messageData = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
-                
-                // Check if it's a VidKing player event
-                if (messageData.type === 'PLAYER_EVENT' && messageData.data) {
-                    const { season, episode, event: playerEvent, currentTime, duration } = messageData.data;
-                    
-                    // Update state if season/episode changed (from auto-skip)
-                    if (season && episode) {
-                        if (season !== seasonNumber) {
-                            setSeasonNumber(season);
-                        }
-                        if (episode !== episodeNumber) {
-                            setEpisodeNumber(episode);
-                        }
-                    }
-                    
-                    // Add to recently watched when playback starts
-                    if (playerEvent === 'play' && currentTime < 60) {
-                        addTvShowId(tvShow.id);
-                    }
-                    
-                    // Save watch progress periodically during playback
-                    if (playerEvent === 'timeupdate' && currentTime && duration) {
-                        const currentSeason = season || seasonNumber;
-                        const currentEpisode = episode || episodeNumber;
-                        saveWatchProgress(tvShow.id, currentSeason, currentEpisode, currentTime, duration);
-                    }
-                    
-                    // Update progress when user seeks
-                    if (playerEvent === 'seeked' && currentTime && duration) {
-                        const currentSeason = season || seasonNumber;
-                        const currentEpisode = episode || episodeNumber;
-                        saveWatchProgress(tvShow.id, currentSeason, currentEpisode, currentTime, duration);
-                    }
-                }
-            } catch (error) {
-                // Ignore non-JSON messages
-            }
-        };
-
-        window.addEventListener('message', handlePlayerMessage);
-
-        return () => {
-            window.removeEventListener('message', handlePlayerMessage);
-        };
-    }, [useVidKing, tvShow, seasonNumber, episodeNumber]);
-
-    const handleNextEpisode = () => {
-        setEpisodeNumber(prev => (prev < totalEpisodes ? prev + 1 : prev));
-    };
-
-    const handlePrevEpisode = () => {
-        setEpisodeNumber(prev => (prev > 1 ? prev - 1 : prev));
-    };
-
-    const handleNextSeason = () => {
-        setSeasonNumber(prev => (prev < totalSeasons ? prev + 1 : prev));
-        setEpisodeNumber(1);
-    };
-
-    const handlePrevSeason = () => {
-        setSeasonNumber(prev => (prev > 1 ? prev - 1 : prev));
-        setEpisodeNumber(1);
-    };
-
-    return (
-        <Modal isOpen={isOpen} onRequestClose={onRequestClose} contentLabel="TV Show Episode">
-            {tvShow && (
-                <div className="movie-details-container" ref={topRef}>
-                    <button onClick={onRequestClose}>Close</button>
-                    <h2>{tvShow.name} - Season {seasonNumber} Episode {episodeNumber}</h2>
-                    <p className="movie-description">{tvShow.overview}</p>
-                    <button 
-                        onClick={() => setUseVidKing(!useVidKing)}
-                        style={{
-                            backgroundColor: '#f5c518',
-                            color: '#000000',
-                            border: 'none',
-                            borderRadius: '5px',
-                            padding: '10px 20px',
-                            cursor: 'pointer',
-                            marginBottom: '10px',
-                            fontWeight: 'bold'
-                        }}
-                    >
-                        Switch to {useVidKing ? 'VidSrc' : 'VidKing'}
-                    </button>
-
-                    {episodeUrl && (
-                        <div style={{position: 'relative', width: '100%', height: '500px', overflow: 'hidden'}}>
-                            <iframe
-                                ref={videoRef}
-                                title={`${tvShow.name} - S${seasonNumber}E${episodeNumber}`}
-                                src={episodeUrl}
-                                allowFullScreen
-                                style={{
-                                    position: 'absolute',
-                                    top: 0,
-                                    left: 0,
-                                    width: '100%',
-                                    height: '100%',
-                                    border: 'none'
-                                }}
-                            ></iframe>
-                        </div>
-                    )}
-
-                    <div className="controls">
-                        <label>
-                            Select Season:
-                            <select value={seasonNumber} onChange={(e) => setSeasonNumber(Number(e.target.value))}>
-                                {Array.from({ length: totalSeasons }, (_, i) => i + 1).map(season => (
-                                    <option key={season} value={season}>{season}</option>
-                                ))}
-                            </select>
-                        </label>
-
-                        <label>
-                            Select Episode:
-                            <select value={episodeNumber} onChange={(e) => setEpisodeNumber(Number(e.target.value))}>
-                                {Array.from({ length: totalEpisodes }, (_, i) => i + 1).map(episode => (
-                                    <option key={episode} value={episode}>{episode}</option>
-                                ))}
-                            </select>
-                        </label>
-                    </div>
+        if (!id || !isOpen || !totalSeasons || selection.season > totalSeasons) return;
+        const controller = new AbortController();
+        setError('');
+        setEpisodes({ season: 0, items: [] });
+        fetchTmdb(`tv/${id}/season/${selection.season}`, {}, controller.signal).then(data => {
+            if (controller.signal.aborted) return;
+            const items = Array.isArray(data.episodes) ? data.episodes.filter(item => item && Number.isInteger(item.episode_number) && item.episode_number > 0) : [];
+            if (!items.length) throw new Error('No episodes');
+            setEpisodes({ season: selection.season, items });
+            setSelection(previous => items.some(item => item.episode_number === previous.episode)
+                ? previous : { ...previous, episode: items[0].episode_number });
+        }).catch(failure => { if (!isCanceled(failure, controller.signal)) setError('Episode details could not be loaded.'); });
+        return () => controller.abort();
+    }, [id, isOpen, selection.season, totalSeasons, attempt]);
+    const changeSelection = next => { setSelection(next); setPlayerLoaded(false); };
+    if (!tvShow) return null;
+    const selectedEpisode = episodes.items.find(item => item.episode_number === selection.episode);
+    return <div className="movie-details-container">
+            <header className="detail-heading"><h2>{tvShow.name}</h2>
+                <div className="detail-meta"><span>TV show</span><span>Season {selection.season}, episode {selection.episode}</span>
+                    {Number.isFinite(tvShow.vote_average) && tvShow.vote_average > 0 && <span className="rating"><Icon name="star" size={14} />{tvShow.vote_average.toFixed(1)}</span>}
                 </div>
-            )}
-        </Modal>
-    );
-};
+            </header>
+            <p className="movie-description">{typeof tvShow.overview === 'string' && tvShow.overview ? tvShow.overview : 'No description available.'}</p>
+            <div className="detail-actions"><WatchlistButton item={tvShow} type="tv" /></div>
+            {error && <div role="alert"><p>{error}</p><button onClick={() => setAttempt(value => value + 1)}>Retry show details</button></div>}
+            {!totalSeasons && !error && <p role="status">Loading show details…</p>}
+            {totalSeasons > 0 && <>
+                <div className="controls">
+                    <label>Select season<select value={selection.season} onChange={event => changeSelection({ season: Number(event.target.value), episode: 1 })}>
+                        {Array.from({ length: totalSeasons }, (_, index) => <option key={index + 1} value={index + 1}>{index + 1}</option>)}
+                    </select></label>
+                    <label>Select episode<select value={selection.episode} disabled={episodes.season !== selection.season}
+                        onChange={event => changeSelection({ ...selection, episode: Number(event.target.value) })}>
+                        {episodes.season !== selection.season ? <option value={selection.episode}>Loading episodes…</option> : episodes.items.map(item => <option key={item.episode_number} value={item.episode_number}>{item.episode_number}{item.name ? ` — ${item.name}` : ''}</option>)}
+                    </select></label>
+                </div>
+                {!playerLoaded && <p role="status">Loading player…</p>}
+                <div className="player-frame"><iframe title={`${tvShow.name} — S${selection.season}E${selection.episode}`}
+                    src={`https://vidsrc.to/embed/tv/${id}/${selection.season}/${selection.episode}`}
+                    allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen onLoad={() => setPlayerLoaded(true)} /></div>
 
-export default TvModal;
+                <ProgressControls key={`${selection.season}:${selection.episode}:${selectedEpisode?.runtime || ''}`} id={id} type="tv"
+                    season={selection.season} episode={selection.episode} runtime={selectedEpisode?.runtime} />
+            </>}
+        </div>;
+}

@@ -1,0 +1,19 @@
+.explore-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 20px; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+.explore-toolbar .browse-tabs { align-self: stretch; align-items: flex-end; }
+.explore-sort { display: flex; align-items: center; gap: 12px; color: var(--muted); font-size: 13px; padding-bottom: 14px; }
+.explore-sort select { background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 8px 32px 8px 12px; }
+.genre-picker { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 32px; }
+.genre-picker button { min-height: 36px; padding: 7px 13px; background: transparent; border-color: var(--border); color: var(--muted); font-size: 13px; font-weight: 500; }
+.genre-picker button:hover { background: var(--hover); color: var(--text); }
+.genre-picker button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--page); }
+.explore-results-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
+.explore-results-heading h2 { margin: 0; }
+.explore-results-heading > span { color: var(--muted); font-size: 13px; }
+.genre-error { color: var(--muted); }
+@media (max-width: 600px) {
+    .explore-sort { flex-direction: column; align-items: flex-start; gap: 4px; font-size: 12px; }
+    .explore-sort select { min-height: 38px; font-size: 13px; max-width: 160px; }
+    .genre-picker { flex-wrap: nowrap; overflow-x: auto; padding: 4px 2px 12px; margin: -4px -2px 20px; }
+    .genre-picker button { flex-shrink: 0; }
+    .explore-results-heading h2 { font-size: 20px; }
+}

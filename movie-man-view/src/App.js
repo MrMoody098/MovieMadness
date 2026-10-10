@@ -1,75 +1,40 @@
 import './App.css';
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import MoviesList from './components/pages/MoviesList';
-import NavBar from './components/NavBar';
 import TVShowsList from './components/pages/TVShowsList';
 import Filter from './components/pages/Filter';
 import ExploreAll from './components/pages/ExploreAll';
-import TvModal from './components/modals/TvModal';
 import Modal from 'react-modal';
+import { STORAGE_ERROR_EVENT } from './utils/mediaLibrary';
 
-// Set the root element for accessibility
-Modal.setAppElement('#root');
+if (document.getElementById('root')) Modal.setAppElement('#root');
 
 function App() {
-    const [selectedTVShow, setSelectedTVShow] = useState(null);
-    const [isTvModalOpen, setIsTvModalOpen] = useState(false);
-    const [isScrolled, setIsScrolled] = useState(false);
-
-    const openTvModal = (tvShow) => {
-        setSelectedTVShow(tvShow);
-        setIsTvModalOpen(true);
-    };
-
-    const closeTvModal = () => {
-        setIsTvModalOpen(false);
-        setSelectedTVShow(null);
-    };
-
+    const [storageError, setStorageError] = useState('');
     useEffect(() => {
-        const handleScroll = () => {
-            if (window.scrollY > 0) {
-                setIsScrolled(true);
-            } else {
-                setIsScrolled(false);
-            }
-        };
-
-        window.addEventListener('scroll', handleScroll);
-        return () => {
-            window.removeEventListener('scroll', handleScroll);
-        };
+        const report = event => setStorageError(event.detail);
+        window.addEventListener(STORAGE_ERROR_EVENT, report);
+        return () => window.removeEventListener(STORAGE_ERROR_EVENT, report);
     }, []);
-
-    return (
-        <Router>
-            <div className={`App ${isScrolled ? 'scrolled' : ''}`}>
-                <main>
-                    <Routes>
-                        <Route path="/" element={<MoviesList />} />
-                        <Route path="/explore" element={<ExploreAll />} />
-                        <Route path="/movies" element={<MoviesList />} />
-                        <Route
-                            path="/tv-shows"
-                            element={<TVShowsList openTvModal={openTvModal} />}
-                        />
-                        <Route path="/filter" element={<Filter />} />
-                    </Routes>
-                </main>
-
-                {/* TvModal */}
-                <Modal
-                    isOpen={isTvModalOpen}
-                    onRequestClose={closeTvModal}
-                    contentLabel="TV Show Details"
-                >
-                    {selectedTVShow && <TvModal tvShow={selectedTVShow} />}
-                    <button onClick={closeTvModal}>Close</button>
-                </Modal>
-            </div>
-        </Router>
-    );
+    return <Router>
+        <div className="App">
+            <a className="skip-link" href="#main-content">Skip to content</a>
+            {storageError && <div className="storage-error" role="alert">{storageError} <button onClick={() => setStorageError('')}>Dismiss</button></div>}
+            <main id="main-content" tabIndex={-1}>
+                <Routes>
+                    <Route path="/" element={<MoviesList />} />
+                    <Route path="/explore" element={<ExploreAll key="explore" />} />
+                    <Route path="/anime" element={<ExploreAll key="anime" animeOnly />} />
+                    <Route path="/search" element={<ExploreAll key="search" searchOnly />} />
+                    <Route path="/watchlist" element={<ExploreAll key="watchlist" watchlistOnly />} />
+                    <Route path="/movies" element={<MoviesList />} />
+                    <Route path="/tv-shows" element={<TVShowsList />} />
+                    <Route path="/filter" element={<Filter />} />
+                    <Route path="*" element={<div><h1>Page not found</h1><Link to="/">Back to movies</Link></div>} />
+                </Routes>
+            </main>
+        </div>
+    </Router>;
 }
-
 export default App;

@@ -1,281 +1,95 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import axios from 'axios';
-import { Range } from 'react-range';
-import "../css/Filter.css";
-import NavBar from "../NavBar";
-import Modal from 'react-modal';
-import MovieModal from "../modals/MovieModal";
-import TvModal from "../modals/TvModal";
-import "../css/Modal.css";
+import React, { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import NavBar from '../NavBar';
+import MediaCard from '../MediaCard';
+import MediaDetails from '../MediaDetails';
+import ResultsStatus from '../ResultsStatus';
+import useFetchItems from '../hooks/useFetchItems';
+import { fetchTmdb, isCanceled } from '../../utils/tmdb';
+import '../css/Filter.css';
 
-const TMDB_API_KEY = 'f58bf4f31de2a8346b5841b863457b1f'; // Your API key
-const MIN_LENGTH = 0;
-const MAX_LENGTH = 300;
+function numericParam(params, key, fallback, min, max) {
+    const raw = params.get(key);
+    if (raw === null || raw.trim() === '') return fallback;
+    const value = Number(raw);
+    return Number.isFinite(value) && value >= min && value <= max ? value : fallback;
+}
 
-const Filter = () => {
+export default function Filter() {
+    const [params, setParams] = useSearchParams();
+    const type = params.get('type') === 'tv' ? 'tv' : 'movie';
+    const genre = params.get('genre') || '';
+    const language = params.get('language') || '';
+    const sortOptions = ['vote_average.desc', 'popularity.desc', type === 'tv' ? 'first_air_date.desc' : 'primary_release_date.desc'];
+    const sort = sortOptions.includes(params.get('sort')) ? params.get('sort') : sortOptions[0];
+    const minVotes = numericParam(params, 'votes', 200, 0, 1000000);
+    const minRating = numericParam(params, 'minRating', 0, 0, 10);
+    const maxRating = numericParam(params, 'maxRating', 10, 0, 10);
+    const minLength = numericParam(params, 'minLength', 0, 0, 300);
+    const maxLength = numericParam(params, 'maxLength', 300, 0, 300);
+    const year = numericParam(params, 'year', 0, 0, new Date().getFullYear() + 5);
+    const valid = minRating <= maxRating && minLength <= maxLength;
+    const results = useFetchItems(type, { endpoint: `discover/${type}`, enabled: valid, params: {
+        sort_by: sort, 'vote_count.gte': minVotes, 'vote_average.gte': minRating,
+        'vote_average.lte': maxRating, ...(genre ? { with_genres: genre } : {}),
+        ...(language ? { with_original_language: language } : {}),
+        ...(year ? { [type === 'movie' ? 'primary_release_year' : 'first_air_date_year']: year } : {}),
+        ...(type === 'movie' ? { 'with_runtime.gte': minLength, 'with_runtime.lte': maxLength } : {})
+    } });
     const [genres, setGenres] = useState([]);
     const [languages, setLanguages] = useState([]);
-    const [selectedGenre, setSelectedGenre] = useState('');
-    const [selectedLanguage, setSelectedLanguage] = useState('');
-    const [items, setItems] = useState([]);
-    const [page, setPage] = useState(1);
-    const [hasMore, setHasMore] = useState(true);
-    const [isMovieMode, setIsMovieMode] = useState(true); // Switch mode
-    const [selectedItem, setSelectedItem] = useState(null); // State for selected item
-    const [isModalOpen, setIsModalOpen] = useState(false); // State for modal
-    const [loading, setLoading] = useState(false); // Loading state
-    const [minVoteCount, setMinVoteCount] = useState(200); // Minimum vote count
-    const [minRating, setMinRating] = useState(0); // Minimum rating
-    const [maxRating, setMaxRating] = useState(10); // Maximum rating
-    const [lengthRange, setLengthRange] = useState([MIN_LENGTH, MAX_LENGTH]); // Length range
-    const loaderRef = useRef(null);
-
+    const [metadataError, setMetadataError] = useState('');
+    const [metadataAttempt, setMetadataAttempt] = useState(0);
+    const [selection, setSelection] = useState(null);
     useEffect(() => {
-        const fetchGenres = async () => {
-            try {
-                const { data } = await axios.get(
-                    `https://api.themoviedb.org/3/genre/${isMovieMode ? 'movie' : 'tv'}/list?api_key=${TMDB_API_KEY}&language=en-US`
-                );
-                setGenres(data.genres);
-            } catch (error) {
-                console.error('Error fetching genres:', error);
-            }
-        };
-
-        const fetchLanguages = async () => {
-            try {
-                const { data } = await axios.get(
-                    `https://api.themoviedb.org/3/configuration/languages?api_key=${TMDB_API_KEY}`
-                );
-                setLanguages(data);
-            } catch (error) {
-                console.error('Error fetching languages:', error);
-            }
-        };
-
-        fetchGenres();
-        fetchLanguages();
-    }, [isMovieMode]);
-
-    const fetchItemsByGenre = async (genreId, page) => {
-        if (loading) return; // Prevent multiple fetches
-
-        setLoading(true);
-        try {
-            const genreFilter = genreId ? `&with_genres=${genreId}` : '';
-            const lengthFilter = `&with_runtime.gte=${lengthRange[0]}&with_runtime.lte=${lengthRange[1]}`;
-            const endpoint = isMovieMode
-                ? `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&sort_by=vote_average.desc&page=${page}&vote_count.gte=${minVoteCount}&vote_average.gte=${minRating}&vote_average.lte=${maxRating}&with_original_language=${selectedLanguage}${genreFilter}${lengthFilter}`
-                : `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&sort_by=vote_average.desc&page=${page}&vote_count.gte=${minVoteCount}&vote_average.gte=${minRating}&vote_average.lte=${maxRating}&with_original_language=${selectedLanguage}${genreFilter}`;
-
-            const { data } = await axios.get(endpoint);
-
-            if (data.results.length === 0) {
-                setHasMore(false);
-            } else {
-                setItems((prevItems) => [...prevItems, ...data.results]);
-            }
-
-            if (data.page >= data.total_pages) {
-                setHasMore(false);
-            }
-        } catch (error) {
-            console.error('Error fetching items by genre:', error);
-        } finally {
-            setLoading(false);
-        }
+        const controller = new AbortController();
+        setGenres([]);
+        setMetadataError('');
+        Promise.all([fetchTmdb(`genre/${type}/list`, {}, controller.signal), fetchTmdb('configuration/languages', {}, controller.signal)])
+            .then(([genreData, languageData]) => {
+                if (controller.signal.aborted) return;
+                setGenres(Array.isArray(genreData.genres) ? genreData.genres : []);
+                setLanguages(Array.isArray(languageData) ? [...languageData].sort((a, b) => a.english_name.localeCompare(b.english_name)) : []);
+            })
+            .catch(error => { if (!isCanceled(error, controller.signal)) setMetadataError('Filter choices could not be loaded.'); });
+        return () => controller.abort();
+    }, [type, metadataAttempt]);
+    const update = (key, value) => {
+        const next = new URLSearchParams(params);
+        const numeric = ['year', 'votes', 'minRating', 'maxRating', 'minLength', 'maxLength'].includes(key);
+        if (value === '' && !numeric) next.delete(key); else next.set(key, String(value));
+        if (key === 'type') { next.delete('genre'); next.delete('sort'); }
+        setParams(next, { replace: numeric });
     };
-
-    useEffect(() => {
-        setItems([]);
-        setPage(1);
-        setHasMore(true);
-        fetchItemsByGenre(selectedGenre, 1);
-    }, [selectedGenre, isMovieMode, minVoteCount, minRating, maxRating, selectedLanguage, lengthRange]);
-
-    useEffect(() => {
-        if (page > 1) {
-            fetchItemsByGenre(selectedGenre, page);
-        }
-    }, [page]);
-
-    const handleGenreChange = (event) => {
-        const genreId = event.target.value;
-        setSelectedGenre(genreId);
-    };
-
-    const handleLanguageChange = (event) => {
-        const languageCode = event.target.value;
-        setSelectedLanguage(languageCode);
-    };
-
-    const handleScroll = useCallback(() => {
-        if (
-            window.innerHeight + document.documentElement.scrollTop + 50 >=
-            document.documentElement.offsetHeight
-        ) {
-            if (hasMore && !loading) {
-                setPage((prevPage) => prevPage + 1);
-            }
-        }
-    }, [hasMore, loading]);
-
-    useEffect(() => {
-        window.addEventListener('scroll', handleScroll);
-        return () => {
-            window.removeEventListener('scroll', handleScroll);
-        };
-    }, [handleScroll]);
-
-    const handleItemClick = (item) => {
-        setSelectedItem(item);
-        setIsModalOpen(true);
-    };
-
-    const closeModal = () => {
-        setIsModalOpen(false);
-    };
-
-    return (
-        <div className="filter-container">
-            <NavBar isModalOpen={isModalOpen}   />
-
-            <div className="filter-header">
-                <h2>Filter by Genre</h2>
-                <div className="switch-container">
-                    <label className="switch">
-                        <input
-                            type="checkbox"
-                            checked={isMovieMode}
-                            onChange={() => setIsMovieMode(!isMovieMode)}
-                        />
-                        <span className="slider"></span>
-                    </label>
-                    <span>{isMovieMode ? 'Movies' : 'TV Shows'}</span>
-                </div>
-                <select value={selectedGenre} onChange={handleGenreChange}>
-                    <option value="">All Genres</option>
-                    {genres.map((genre) => (
-                        <option key={genre.id} value={genre.id}>
-                            {genre.name}
-                        </option>
-                    ))}
-                </select>
-                <select value={selectedLanguage} onChange={handleLanguageChange}>
-                    <option value="">All Languages</option>
-                    {languages.map((language) => (
-                        <option key={language.iso_639_1} value={language.iso_639_1}>
-                            {language.english_name}
-                        </option>
-                    ))}
-                </select>
-                <div className="filter-inputs">
-                    <label>
-                        Min Vote Count:
-                        <input
-                            type="number"
-                            value={minVoteCount}
-                            onChange={(e) => setMinVoteCount(e.target.value)}
-                        />
-                    </label>
-                    <label>
-                        Min Rating:
-                        <input
-                            type="number"
-                            step="0.1"
-                            value={minRating}
-                            onChange={(e) => setMinRating(e.target.value)}
-                            min="0"
-                            max="10"
-                        />
-                    </label>
-                    <label>
-                        Max Rating:
-                        <input
-                            type="number"
-                            step="0.1"
-                            value={maxRating}
-                            onChange={(e) => setMaxRating(e.target.value)}
-                            min="0"
-                            max="10"
-                        />
-                    </label>
-                    <label>
-                        Length Range:
-                        <div className="range-slider-container">
-                            <Range
-                                step={1}
-                                min={MIN_LENGTH}
-                                max={MAX_LENGTH}
-                                values={lengthRange}
-                                onChange={(values) => setLengthRange(values)}
-                                renderTrack={({ props, children }) => (
-                                    <div
-                                        {...props}
-                                        className="range-slider-track"
-                                    >
-                                        {children}
-                                    </div>
-                                )}
-                                renderThumb={({ props }) => (
-                                    <div
-                                        {...props}
-                                        className="range-slider-thumb"
-                                    />
-                                )}
-                            />
-                            <div className="range-slider-values">
-                                <span>{lengthRange[0]}</span>
-                                <span>-</span>
-                                <span>{lengthRange[1]} mins</span>
-                            </div>
-                        </div>
-                    </label>
-                </div>
-            </div>
-
-            <div className="movies-container">
-                {items.map((item) => (
-                    <div
-                        key={item.id}
-                        className="movie-card"
-                        onClick={() => handleItemClick(item)}
-                    >
-                        <div className="movie-poster">
-                            <img
-                                src={item.poster_path
-                                    ? `https://image.tmdb.org/t/p/w500/${item.poster_path}`
-                                    : 'default-poster.jpg'}
-                                alt={item.title || item.name}
-                            />
-                        </div>
-
-                        <div className="movie-details">
-                            <h2>{item.title || item.name}</h2>
-                            <p>Rating: {Math.round(item.vote_average) || 'N/A'}</p>
-                        </div>
-                    </div>
-                ))}
-            </div>
-
-            {loading && <div>Loading...</div>}
-            {hasMore && !loading && <div ref={loaderRef} className="loader">Loading more...</div>}
-
-            <Modal
-                isOpen={isModalOpen}
-                onRequestClose={closeModal}
-                contentLabel="Details"
-            >
-                <button onClick={closeModal}>Close</button>
-                {selectedItem && (isMovieMode
-                        ? <MovieModal movie={selectedItem}/>
-                        : <TvModal isOpen={isModalOpen}
-                                   onRequestClose={closeModal}
-                                   tvShow={selectedItem}/>
-                )}
-            </Modal>
+    const select = (item, mediaType) => setSelection({ item, type: mediaType });
+    return <div className="filter-container">
+        <NavBar isModalOpen={Boolean(selection)} />
+        <div className="page-heading"><div><h1>Find your next watch</h1><p>Narrow it down by genre, year, and rating.</p></div>
+            <button className="text-button" onClick={() => setParams({})}>Reset filters</button>
         </div>
-    );
-};
-
-export default Filter;
+        <div className="filter-header">
+            <label>Title type<select value={type} onChange={event => update('type', event.target.value)}><option value="movie">Movies</option><option value="tv">TV Shows</option></select></label>
+            <label>Genre<select value={genre} onChange={event => update('genre', event.target.value)}><option value="">All genres</option>{genres.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
+            <label>Language<select value={language} onChange={event => update('language', event.target.value)}><option value="">All languages</option>{languages.map(item => <option key={item.iso_639_1} value={item.iso_639_1}>{item.english_name}</option>)}</select></label>
+            <label>Sort by<select value={sort} onChange={event => update('sort', event.target.value)}><option value={sortOptions[0]}>Highest rated</option><option value={sortOptions[1]}>Most popular</option><option value={sortOptions[2]}>Newest releases</option></select></label>
+            <label>Release year<input type="number" min="1870" max={new Date().getFullYear() + 5} value={params.get('year') ?? (year || '')} placeholder="Any year" onChange={event => update('year', event.target.value)} /></label>
+            <label>Minimum rating<input type="number" min="0" max="10" step="0.1" value={params.get('minRating') ?? minRating} onChange={event => update('minRating', event.target.value)} /></label>
+        </div>
+        <details className="advanced-filters">
+            <summary>More filters</summary>
+            <div className="filter-header">
+                <label>Minimum votes<input type="number" min="0" max="1000000" value={params.get('votes') ?? minVotes} onChange={event => update('votes', event.target.value)} /></label>
+                <label>Maximum rating<input type="number" min="0" max="10" step="0.1" value={params.get('maxRating') ?? maxRating} onChange={event => update('maxRating', event.target.value)} /></label>
+                {type === 'movie' && <>
+                    <label>Minimum runtime (minutes)<input type="number" min="0" max="300" value={params.get('minLength') ?? minLength} onChange={event => update('minLength', event.target.value)} /></label>
+                    <label>Maximum runtime (minutes)<input type="number" min="0" max="300" value={params.get('maxLength') ?? maxLength} onChange={event => update('maxLength', event.target.value)} /></label>
+                </>}
+            </div>
+        </details>
+        {!valid && <p role="alert">Minimum rating and runtime must not exceed their maximum values.</p>}
+        {metadataError && <div role="alert"><p>{metadataError}</p><button onClick={() => setMetadataAttempt(value => value + 1)}>Retry filter choices</button></div>}
+        <div className="movies-container">{results.items.map(item => <MediaCard key={item.id} item={item} type={type} onSelect={select} />)}</div>
+        {valid && <ResultsStatus autoLoad {...results} empty={!results.items.length} />}
+        <MediaDetails selection={selection} onSelect={select} onClose={() => setSelection(null)} />
+    </div>;
+}

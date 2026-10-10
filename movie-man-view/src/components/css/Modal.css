@@ -1,50 +1,6 @@
-/* src/components/css/Modal.css */
-.ReactModal__Overlay {
-    background-color: rgba(0, 0, 0, 0.7) !important;
-    z-index: 2000; /* Ensure modal overlay is above NavBar */
-}
-
-.ReactModal__Content {
-    background-color: #1e1e1e !important;
-    color: #ffffff !important;
-    border-radius: 10px;
-    padding: 20px;
-    max-width: 1200px;
-    max-height: 900px;
-    margin: auto;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-.ReactModal__Content button {
-    background-color: #f5c518;
-    color: #1e1e1e;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
-    cursor: pointer;
-    margin-top: 20px;
-}
-
-.ReactModal__Content button:hover {
-    background-color: #e5b518;
-}
-
-/* Custom dark-themed scroll bar */
-.ReactModal__Content::-webkit-scrollbar {
-    width: 12px;
-}
-
-.ReactModal__Content::-webkit-scrollbar-track {
-    background: #2e2e2e;
-    border-radius: 10px;
-}
-
-.ReactModal__Content::-webkit-scrollbar-thumb {
-    background-color: #555;
-    border-radius: 10px;
-    border: 3px solid #2e2e2e;
-}
-
-.ReactModal__Content::-webkit-scrollbar-thumb:hover {
-    background-color: #777;
-}
+.ReactModal__Body--open { overflow: hidden; }
+.ReactModal__Overlay { background: rgba(0, 0, 0, .82) !important; z-index: 2000; }
+.ReactModal__Content { background: var(--page) !important; color: var(--text) !important; border: 1px solid var(--border) !important; border-radius: 12px !important; max-width: 1100px; margin: auto; padding: 38px !important; scrollbar-color: #555963 var(--page); }
+.modal-close { position: absolute; top: 16px; right: 16px; border: 0; border-radius: 50%; z-index: 1; }
+@media (max-width: 700px) { .ReactModal__Content { inset: 12px !important; padding: 26px 20px !important; } }
+@media (max-width: 480px) { .ReactModal__Content { inset: 0 !important; border: 0 !important; border-radius: 0 !important; padding: 28px 18px !important; } }
