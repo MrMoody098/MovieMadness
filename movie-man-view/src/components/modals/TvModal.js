@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import Modal from 'react-modal';
 import '../css/TvModal.css';
 import '../css/MoviesList.css';
 import '../css/MovieModal.css';
@@ -9,7 +8,7 @@ import WatchlistButton from '../WatchlistButton';
 import ProgressControls from '../ProgressControls';
 import Icon from '../Icon';
 
-export default function TvModal({ isOpen, onRequestClose, tvShow }) {
+export default function TvModal({ isOpen, tvShow }) {
     const [saved] = useState(() => tvShow ? getShowProgress(tvShow.id) : null);
     const [selection, setSelection] = useState({ season: saved?.lastWatchedSeason || 1, episode: saved?.lastWatchedEpisode || 1 });
     const [totalSeasons, setTotalSeasons] = useState(0);
@@ -48,9 +47,7 @@ export default function TvModal({ isOpen, onRequestClose, tvShow }) {
     const changeSelection = next => { setSelection(next); setPlayerLoaded(false); };
     if (!tvShow) return null;
     const selectedEpisode = episodes.items.find(item => item.episode_number === selection.episode);
-    return <Modal isOpen={isOpen} onRequestClose={onRequestClose} contentLabel="TV show episode">
-        <button className="modal-close icon-button" onClick={onRequestClose} aria-label="Close"><Icon name="close" /></button>
-        <div className="movie-details-container">
+    return <div className="movie-details-container">
             <header className="detail-heading"><h2>{tvShow.name}</h2>
                 <div className="detail-meta"><span>TV show</span><span>Season {selection.season}, episode {selection.episode}</span>
                     {Number.isFinite(tvShow.vote_average) && tvShow.vote_average > 0 && <span className="rating"><Icon name="star" size={14} />{tvShow.vote_average.toFixed(1)}</span>}
@@ -78,6 +75,5 @@ export default function TvModal({ isOpen, onRequestClose, tvShow }) {
                 <ProgressControls key={`${selection.season}:${selection.episode}:${selectedEpisode?.runtime || ''}`} id={id} type="tv"
                     season={selection.season} episode={selection.episode} runtime={selectedEpisode?.runtime} />
             </>}
-        </div>
-    </Modal>;
+        </div>;
 }

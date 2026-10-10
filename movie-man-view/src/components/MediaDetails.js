@@ -6,11 +6,11 @@ import TvModal from './modals/TvModal';
 import './css/Modal.css';
 
 export default function MediaDetails({ selection, onSelect, onClose }) {
-    if (!selection) return null;
-    const { item, type } = selection;
-    if (type === 'tv') return <TvModal key={`tv:${item.id}`} isOpen onRequestClose={onClose} tvShow={item} />;
-    return <Modal isOpen onRequestClose={onClose} contentLabel="Movie details">
+    return <Modal isOpen={Boolean(selection)} onRequestClose={onClose}
+        contentLabel={selection?.type === 'tv' ? 'TV show episode' : 'Movie details'}>
         <button className="modal-close icon-button" onClick={onClose} aria-label="Close"><Icon name="close" /></button>
-        <MovieModal key={`movie:${item.id}`} movie={item} onMovieSelect={movie => onSelect(movie, 'movie')} />
+        {selection?.type === 'tv' ? <TvModal key={`tv:${selection.item.id}`} isOpen tvShow={selection.item} />
+            : selection && <MovieModal key={`movie:${selection.item.id}`} movie={selection.item}
+                onMovieSelect={movie => onSelect(movie, 'movie')} />}
     </Modal>;
 }

@@ -8,6 +8,7 @@ import NavBar from './components/NavBar';
 import MoviesList from './components/pages/MoviesList';
 import Filter from './components/pages/Filter';
 import ExploreAll from './components/pages/ExploreAll';
+import MediaDetails from './components/MediaDetails';
 import MovieModal from './components/modals/MovieModal';
 import TvModal from './components/modals/TvModal';
 import HistorySection from './components/HistorySection';
@@ -346,4 +347,33 @@ test('Anime retains Japanese animation constraints across genres, collections, a
     } finally {
         delete window.IntersectionObserver;
     }
+});
+
+
+function ModalHarness() {
+    const [selection, setSelection] = React.useState(null);
+    return <><button onClick={() => setSelection({ item: movie, type: 'movie' })}>Show movie</button>
+        <button onClick={() => setSelection({ item: tv, type: 'tv' })}>Show TV</button>
+        <MediaDetails selection={selection} onSelect={(item, type) => setSelection({ item, type })} onClose={() => setSelection(null)} /></>;
+}
+
+test('closing movie and TV details in Strict Mode releases the page scroll lock', async () => {
+    await act(async () => { render(<React.StrictMode><ModalHarness /></React.StrictMode>); });
+    for (const label of ['Show movie', 'Show TV', 'Show movie']) {
+        await act(async () => { fireEvent.click(screen.getByRole('button', { name: label })); });
+        expect(document.body).toHaveClass('ReactModal__Body--open');
+        await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Close' })); });
+        expect(document.body).not.toHaveClass('ReactModal__Body--open');
+        expect(document.getElementById('root')).not.toHaveAttribute('aria-hidden', 'true');
+    }
+});
+
+test('leaving a page with open details releases the scroll lock', async () => {
+    let view;
+    await act(async () => { view = render(<React.StrictMode><ModalHarness /></React.StrictMode>); });
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Show TV' })); });
+    expect(document.body).toHaveClass('ReactModal__Body--open');
+    await act(async () => { view.unmount(); });
+    expect(document.body).not.toHaveClass('ReactModal__Body--open');
+    expect(document.getElementById('root')).not.toHaveAttribute('aria-hidden', 'true');
 });
