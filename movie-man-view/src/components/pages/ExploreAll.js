@@ -1,99 +1,50 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import NavBar from "../NavBar";
-import { getMovieIds, addMovieId } from '../utils/recentlyWatched';
-import { getTvShowIds, addTvShowId } from '../utils/recentlyWatchedTv';
-import '../css/MoviesList.css';
-import Carousel from "../carosel/Carosel";
-import GenreCarousel from "../carosel/GenreCarousel";
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import NavBar from '../NavBar';
+import Carousel from '../carosel/Carosel';
+import GenreCarousel from '../carosel/GenreCarousel';
 import useFetchItems from '../hooks/useFetchItems';
-import MovieModal from '../modals/MovieModal';
-import TvModal from '../modals/TvModal';
-import Modal from 'react-modal';
+import MediaCard from '../MediaCard';
+import MediaDetails from '../MediaDetails';
+import HistorySection from '../HistorySection';
+import ResultsStatus from '../ResultsStatus';
+import { getWatchlist, toggleWatchlist, LIBRARY_EVENT } from '../../utils/mediaLibrary';
+import '../css/MoviesList.css';
 
-const API_KEY = 'f58bf4f31de2a8346b5841b863457b1f';
-
-const ExploreAll = () => {
-    const [recentlyWatched, setRecentlyWatched] = useState([]);
-    const [searchQuery, setSearchQuery] = useState('');
-    const [searchResults, setSearchResults] = useState([]);
-    const [isSearching, setIsSearching] = useState(false);
-    const [selectedItem, setSelectedItem] = useState(null);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [modalType, setModalType] = useState(''); // 'movie' or 'tv'
-
-    const fetchRecentlyWatched = async () => {
-        const movieIds = getMovieIds();
-        const tvShowIds = getTvShowIds();
-
-        const movieDetailsPromises = movieIds.map(id =>
-            axios.get(`https://api.themoviedb.org/3/movie/${id}?api_key=${API_KEY}`)
-        );
-        const tvShowDetailsPromises = tvShowIds.map(id =>
-            axios.get(`https://api.themoviedb.org/3/tv/${id}?api_key=${API_KEY}`)
-        );
-
-        const movieDetails = await Promise.all(movieDetailsPromises);
-        const tvShowDetails = await Promise.all(tvShowDetailsPromises);
-
-        const combinedDetails = [
-            ...movieDetails.map(response => ({ ...response.data, type: 'movie' })),
-            ...tvShowDetails.map(response => ({ ...response.data, type: 'tv' }))
-        ];
-
-        setRecentlyWatched(combinedDetails);
-    };
-
+export default function ExploreAll({ searchOnly = false, watchlistOnly = false }) {
+    const [params] = useSearchParams();
+    const query = params.get('q') || '';
+    const results = useFetchItems('multi', { query, enabled: searchOnly && Boolean(query.trim()) });
+    const [selection, setSelection] = useState(null);
+    const [watchlist, setWatchlist] = useState(getWatchlist);
+    const select = (item, type) => setSelection({ item, type });
     useEffect(() => {
-        fetchRecentlyWatched();
+        const refresh = () => setWatchlist(getWatchlist());
+        window.addEventListener(LIBRARY_EVENT, refresh);
+        window.addEventListener('storage', refresh);
+        return () => { window.removeEventListener(LIBRARY_EVENT, refresh); window.removeEventListener('storage', refresh); };
     }, []);
-
-    const handleDelete = (id, type) => {
-        if (type === 'movie') {
-            let movieIds = getMovieIds();
-            movieIds = movieIds.filter(movieId => movieId !== id);
-            localStorage.setItem('recentlyWatched', JSON.stringify(movieIds));
-        } else {
-            let tvShowIds = getTvShowIds();
-            tvShowIds = tvShowIds.filter(tvShowId => tvShowId !== id);
-            localStorage.setItem('recentlyWatchedTv', JSON.stringify(tvShowIds));
-        }
-        fetchRecentlyWatched();
-    };
-
-    return (
-        <div>
-            <NavBar onSearch={() => {}} />
-            <Carousel />
-            <div className="recently-watched">
-                <h2>All Recently Watched</h2>
-                <div className="movies-container">
-                    {recentlyWatched.map((item) => (
-                        <div className="movie-card" key={item.id}>
-                            <button className="delete-button" onClick={() => handleDelete(item.id, item.type)}>X</button>
-                            <div className="movie-poster">
-                                <img src={`https://image.tmdb.org/t/p/w500/${item.poster_path}`} alt={item.title || item.name} />
-                            </div>
-                            <div className="movie-details">
-                                <h2>{item.title || item.name}</h2>
-                                <p>Rating: {item.vote_average ? item.vote_average.toFixed(1) : 'N/A'}</p>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </div>
-            <div className="genre-carousel">
-                <div className="action-movies">
-                    <h2>Action Movies</h2>
-                    <GenreCarousel genreName="action" />  // For Action genre
-                </div>
-                <div className="comedy-movies">
-                    <h2>Comedy Movies</h2>
-                    <GenreCarousel genreName="comedy" />  // For Comedy genre
-                </div>
-             </div>
-        </div>
-    );
-};
-
-export default ExploreAll;
+    return <div>
+        <NavBar isModalOpen={Boolean(selection)} />
+        <h1>{watchlistOnly ? 'Your Watchlist' : searchOnly ? 'Search Movies and TV' : 'Explore'}</h1>
+        {watchlistOnly ? <>
+            {!watchlist.length && <p role="status">Save titles from their details to build your watchlist.</p>}
+            <div className="movies-container">{watchlist.map(item =>
+                <MediaCard key={`${item.media_type}:${item.id}`} item={item} type={item.media_type} onSelect={select}>
+                    <button onClick={() => toggleWatchlist(item, item.media_type)} aria-label={`Remove ${item.title || item.name} from watchlist`}>Remove from watchlist</button>
+                </MediaCard>)}</div>
+        </> : searchOnly ? <>
+            {query.trim() && <h2>Results for “{query.trim()}”</h2>}
+            <div className="movies-container">{results.items.map(item =>
+                <MediaCard key={`${item.media_type}:${item.id}`} item={item} type={item.media_type} onSelect={select} />)}</div>
+            <ResultsStatus autoLoad {...results} empty={!results.items.length}
+                emptyMessage={query.trim() ? 'No matching movies or TV shows. Try another title.' : 'Use the search above to find movies and TV shows.'} />
+        </> : <>
+            <Carousel onSelect={select} />
+            <HistorySection onSelect={select} />
+            <GenreCarousel genreId={28} heading="Action Movies" onSelect={select} />
+            <GenreCarousel genreId={35} heading="Comedy Movies" onSelect={select} />
+        </>}
+        <MediaDetails selection={selection} onSelect={select} onClose={() => setSelection(null)} />
+    </div>;
+}

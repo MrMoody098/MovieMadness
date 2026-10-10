@@ -1,101 +1,75 @@
-// src/hooks/useFetchItems.js
-import { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { fetchTmdb, isCanceled } from '../../utils/tmdb';
 
-const TMDB_API_KEY = process.env.REACT_APP_TMDB_API_KEY;
-const useFetchItems = (type) => {
-    const [items, setItems] = useState([]);
-    const [selectedItem, setSelectedItem] = useState(null);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [searchQuery, setSearchQuery] = useState('');
-    const [page, setPage] = useState(1);
-    const [hasMore, setHasMore] = useState(true);
-    const [loading, setLoading] = useState(false);
+const useFetchItems = (type, options = {}) => {
+    const { query = '', endpoint = '', params = {}, enabled = true } = options;
+    const requestKey = JSON.stringify({ type, query: query.trim(), endpoint, params, enabled });
+    const [pagination, setPagination] = useState({ key: requestKey, page: 1 });
+    const page = pagination.key === requestKey ? pagination.page : 1;
+    const [result, setResult] = useState({ key: '', items: [], hasMore: true });
+    const [loading, setLoading] = useState(enabled);
+    const [error, setError] = useState('');
+    const [attempt, setAttempt] = useState(0);
+    const busy = useRef(false);
 
-    const fetchItems = async (query = '', page = 1) => {
-        if (loading) return;
-
-        setLoading(true);
-        try {
-            let url;
-            if (query) {
-                url = `https://api.themoviedb.org/3/search/${type}?api_key=${TMDB_API_KEY}&query=${query}&include_adult=false&language=en-US&page=${page}`;
-            } else {
-                url = `https://api.themoviedb.org/3/trending/${type}/day?api_key=${TMDB_API_KEY}&page=${page}&voting_count.gte=250`;
-            }
-
-            const { data } = await axios.get(url);
-            const modifiedItems = data.results.map((item) => ({
-                ...item,
-                poster: item.poster_path
-                    ? `https://image.tmdb.org/t/p/w500/${item.poster_path}`
-                    : 'default-poster.jpg',
-            }));
-
-            setItems((prevItems) => [...prevItems, ...modifiedItems]);
-            setHasMore(data.results.length > 0);
-        } catch (error) {
-            console.error(`Error fetching ${type}:`, error);
-        } finally {
+    useEffect(() => {
+        const controller = new AbortController();
+        setPagination(previous => previous.key === requestKey ? previous : { key: requestKey, page: 1 });
+        const request = JSON.parse(requestKey);
+        if (!request.enabled) {
+            busy.current = false;
             setLoading(false);
+            setError('');
+            return () => controller.abort();
         }
-    };
+        busy.current = true;
+        setLoading(true);
+        setError('');
+        const path = request.endpoint || (request.query ? `search/${request.type}` : `trending/${request.type}/day`);
+        fetchTmdb(path, { ...request.params, page, include_adult: false,
+            ...(request.query ? { query: request.query } : {}) }, controller.signal)
+            .then(data => {
+                if (controller.signal.aborted) return;
+                if (!Array.isArray(data.results)) throw new Error('Invalid results');
+                const incoming = data.results.filter(item => item && Number.isInteger(item.id) && item.id > 0 && typeof (item.title || item.name) === 'string'
+                    && (request.type !== 'multi' || ['movie', 'tv'].includes(item.media_type)));
+                setResult(previous => {
+                    const items = page === 1 || previous.key !== requestKey ? [] : previous.items;
+                    const seen = new Set(items.map(item => `${item.media_type || request.type}:${item.id}`));
+                    return { key: requestKey, items: [...items, ...incoming.filter(item => {
+                        const key = `${item.media_type || request.type}:${item.id}`;
+                        if (seen.has(key)) return false;
+                        seen.add(key);
+                        return true;
+                    })], hasMore: page < Math.min(Number(data.total_pages) || 0, 500) };
+                });
+            })
+            .catch(failure => {
+                if (!isCanceled(failure, controller.signal)) {
+                    setError(process.env.REACT_APP_TMDB_API_KEY
+                        ? 'Titles could not be loaded. Check your connection and try again.'
+                        : 'Movie data is unavailable. The site needs a TMDB API key configured.');
+                }
+            })
+            .finally(() => {
+                if (!controller.signal.aborted) {
+                    busy.current = false;
+                    setLoading(false);
+                }
+            });
+        return () => controller.abort();
+    }, [requestKey, page, attempt]);
 
-    useEffect(() => {
-        fetchItems('', page);
-    }, [page]);
+    const hasMore = enabled && (result.key !== requestKey || result.hasMore);
+    const loadMore = useCallback(() => {
+        if (busy.current || loading || error || !hasMore) return;
+        busy.current = true;
+        setLoading(true);
+        setPagination(previous => ({ key: requestKey,
+            page: previous.key === requestKey ? previous.page + 1 : 2 }));
+    }, [requestKey, loading, error, hasMore]);
 
-    useEffect(() => {
-        if (searchQuery) {
-            setItems([]);
-            setPage(1);
-            fetchItems(searchQuery, 1);
-        } else {
-            // Clear search results and show trending when query is empty
-            setItems([]);
-            setPage(1);
-            fetchItems('', 1);
-        }
-    }, [searchQuery]);
-
-    const handleItemClick = (item) => {
-        setSelectedItem(item);
-        setIsModalOpen(true);
-    };
-
-    const closeModal = () => {
-        setIsModalOpen(false);
-    };
-
-    const handleScroll = useCallback(() => {
-        if (
-            window.innerHeight + document.documentElement.scrollTop + 50 >=
-            document.documentElement.offsetHeight
-        ) {
-            if (hasMore && !loading) {
-                setPage((prevPage) => prevPage + 1);
-            }
-        }
-    }, [hasMore, loading]);
-
-    useEffect(() => {
-        window.addEventListener('scroll', handleScroll);
-        return () => {
-            window.removeEventListener('scroll', handleScroll);
-        };
-    }, [handleScroll]);
-
-    return {
-        items,
-        selectedItem,
-        isModalOpen,
-        searchQuery,
-        setSearchQuery,
-        hasMore,
-        loading,
-        handleItemClick,
-        closeModal,
-    };
+    return { items: result.key === requestKey ? result.items : [], loading, error, hasMore,
+        loadMore, retry: () => setAttempt(value => value + 1) };
 };
-
 export default useFetchItems;
