@@ -112,7 +112,7 @@ test('navigation searches both media types and keeps browse links visible', asyn
     fireEvent.submit(screen.getByRole('search'));
     expect(screen.getByTestId('location')).toHaveTextContent('/search?q=A%20%26%20B');
     expect(screen.getByRole('link', { name: 'Movies' })).toHaveAttribute('href', '/movies');
-    expect(screen.getByRole('link', { name: 'TV Shows' })).toHaveAttribute('href', '/tv-shows');
+    expect(screen.getByRole('link', { name: 'TV shows' })).toHaveAttribute('href', '/tv-shows');
 });
 
 test('unified search ignores people and opens TV results', async () => {
@@ -301,6 +301,26 @@ test('infinite loading retains existing titles after failure and retries the sam
         await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Try again' })); });
         await screen.findByRole('button', { name: 'Open Next Movie' });
         expect(axios.get.mock.calls.map(([, config]) => config.params.page)).toEqual([1, 2, 2]);
+    } finally {
+        delete window.IntersectionObserver;
+    }
+});
+
+test('Explore discovers genres, shares filters in the URL, and clears movie genres when switching to TV', async () => {
+    window.IntersectionObserver = jest.fn(() => ({ observe: jest.fn(), disconnect: jest.fn() }));
+    try {
+        await act(async () => { render(<MemoryRouter initialEntries={['/explore']}><ExploreAll /><Location /></MemoryRouter>); });
+        await screen.findByRole('button', { name: 'Action' });
+        await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Action' })); });
+        await waitFor(() => expect(axios.get.mock.calls.filter(([url]) => url.endsWith('/discover/movie')).at(-1)[1].params.with_genres).toBe('28'));
+        expect(screen.getByRole('heading', { name: 'Popular · Action' })).toBeInTheDocument();
+        await act(async () => { fireEvent.change(screen.getByLabelText('Collection'), { target: { value: 'top_rated' } }); });
+        await waitFor(() => expect(axios.get.mock.calls.filter(([url]) => url.endsWith('/discover/movie')).at(-1)[1].params).toMatchObject({ sort_by: 'vote_average.desc', 'vote_count.gte': 300 }));
+        await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'TV shows' })); });
+        await waitFor(() => expect(axios.get.mock.calls.some(([url]) => url.endsWith('/discover/tv'))).toBe(true));
+        expect(screen.getByTestId('location')).toHaveTextContent('type=tv');
+        expect(screen.getByTestId('location')).not.toHaveTextContent('genre=');
+        expect(screen.queryByRole('button', { name: /load more/i })).not.toBeInTheDocument();
     } finally {
         delete window.IntersectionObserver;
     }
