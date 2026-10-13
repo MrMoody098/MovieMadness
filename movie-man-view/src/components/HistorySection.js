@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { LIBRARY_EVENT, getHistoryIds, readStored, removeHistory } from '../utils/mediaLibrary';
-import { getShowProgress, getMovieProgress } from '../utils/watchProgress';
 import { fetchTmdb } from '../utils/tmdb';
 import MediaCard from './MediaCard';
 
@@ -10,7 +9,6 @@ export default function HistorySection({ type, onSelect }) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [deleteMode, setDeleteMode] = useState(false);
-    const [showHistory, setShowHistory] = useState(false);
     const [selected, setSelected] = useState([]);
     const [, setStorageVersion] = useState(0);
     const ids = JSON.stringify(type ? getHistoryIds(type).map(id => ({ id, type })) :
@@ -43,10 +41,6 @@ export default function HistorySection({ type, onSelect }) {
     const dates = storedDates && typeof storedDates === 'object' ? storedDates : {};
     const sortedItems = [...items].sort((a, b) => (Date.parse(dates[`${b.media_type}:${b.id}`]) || 0)
         - (Date.parse(dates[`${a.media_type}:${a.id}`]) || 0));
-    const continuing = sortedItems.filter(item => {
-        const progress = item.media_type === 'tv' ? getShowProgress(item.id) : getMovieProgress(item.id);
-        return progress && (progress.watchTime > 0 || progress.status === 'watching') && progress.progressPercentage < 95;
-    });
     const select = (item, mediaType) => {
         if (!deleteMode) { onSelect(item, mediaType); return; }
         const key = `${mediaType}:${item.id}`;
@@ -58,14 +52,10 @@ export default function HistorySection({ type, onSelect }) {
         setDeleteMode(false);
     };
     if (ids === '[]') return null;
-    const showContinue = continuing.length > 0 && !showHistory && !deleteMode;
-    const displayedItems = showContinue ? continuing : sortedItems;
     return <section className="catalog-section">
         <div className="section-heading">
-            <h2>{showContinue ? 'Continue watching' : 'Recently watched'}</h2>
+            <h2>Recently watched</h2>
             <div className="section-actions">
-                {continuing.length > 0 && !deleteMode && <button className="text-button" onClick={() => setShowHistory(value => !value)}>
-                    {showContinue ? 'View history' : 'Continue watching'}</button>}
                 <button className="text-button" onClick={() => { setDeleteMode(value => !value); setSelected([]); }}>
                     {deleteMode ? 'Cancel' : 'Manage'}</button>
             </div>
@@ -77,7 +67,7 @@ export default function HistorySection({ type, onSelect }) {
                 {selected.length === sortedItems.length ? 'Deselect all' : 'Select all'}</button>
             <button className="secondary" onClick={remove} disabled={!selected.length}>Remove selected{selected.length ? ` (${selected.length})` : ''}</button>
         </div>}
-        <div className="carousel">{displayedItems.map(item => <MediaCard key={`${item.media_type}:${item.id}`} item={item}
+        <div className="carousel">{sortedItems.map(item => <MediaCard key={`${item.media_type}:${item.id}`} item={item}
             type={item.media_type} onSelect={select} selectionMode={deleteMode} selected={selected.includes(`${item.media_type}:${item.id}`)} />)}</div>
     </section>;
 }

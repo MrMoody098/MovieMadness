@@ -1,10 +1,8 @@
 import React from 'react';
-import { getMovieProgress, getShowProgress } from '../utils/watchProgress';
 import Icon from './Icon';
 
 export default function MediaCard({ item, type, onSelect, selected = false, selectionMode = false, children }) {
     const title = item.title || item.name;
-    const progress = type === 'tv' ? getShowProgress(item.id) : getMovieProgress(item.id);
     const date = item.release_date || item.first_air_date;
     const year = typeof date === 'string' ? date.slice(0, 4) : '';
     const rating = Number.isFinite(item.vote_average) && item.vote_average > 0 ? item.vote_average.toFixed(1) : null;
@@ -20,11 +18,6 @@ export default function MediaCard({ item, type, onSelect, selected = false, sele
                         if (!event.currentTarget.src.endsWith('/default-poster.svg')) event.currentTarget.src = '/default-poster.svg';
                     }} />
                 <span className="poster-action" aria-hidden="true"><Icon name={selectionMode ? selected ? 'check' : 'plus' : 'play'} /></span>
-                {progress && type === 'tv' && <span className="episode-badge">S{progress.lastWatchedSeason} E{progress.lastWatchedEpisode}</span>}
-                {progress && progress.progressPercentage > 0 && <div className="progress-bar-container" role="progressbar"
-                    aria-label={`${title} watch progress`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress.progressPercentage)}>
-                    <div className="progress-bar" style={{ transform: `scaleX(${progress.progressPercentage / 100})` }} />
-                </div>}
             </div>
             <div className="movie-details">
                 <h3 title={title}>{title}</h3>

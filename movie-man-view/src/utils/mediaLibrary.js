@@ -39,12 +39,14 @@ export function getHistoryIds(type) {
 }
 
 export function recordPlayback(type, id) {
-    if (!Number.isInteger(id) || id <= 0) return;
+    if (!Number.isInteger(id) || id <= 0) return false;
     const ids = getHistoryIds(type);
-    writeStored(historyKey(type), [id, ...ids.filter(value => value !== id)]);
+    const saved = writeStored(historyKey(type), [id, ...ids.filter(value => value !== id)]);
+    if (!saved) return false;
     const stored = readStored('viewingDates', {});
     const dates = stored && typeof stored === 'object' && !Array.isArray(stored) ? stored : {};
     writeStored('viewingDates', { ...dates, [`${type}:${id}`]: new Date().toISOString() });
+    return true;
 }
 
 export function removeHistory(type, ids) {

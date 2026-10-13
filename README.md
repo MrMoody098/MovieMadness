@@ -47,8 +47,8 @@ The root `docker-compose.yml` and `docker-compose.prod.yml` provide container se
 
 ## Gotchas / Limitations
 
-- Watchlist, history, and saved positions live in browser storage. They do not sync between devices, and clearing site data removes them.
-- Playback position is entered manually. The embedded VidSrc player does not expose a seek or playback event API to this app, so a saved timestamp is shown for you to seek to with the player controls.
+- Watchlist and Recently watched titles live in browser storage. They do not sync between devices, and clearing site data removes them. Use **Mark as watched** in a title's details to add it to the list.
+- The app does not track playback position or resume a video or episode.
 - Search and catalog pages need access to TMDb. Embedded playback also depends on VidSrc being reachable and serving the selected title.
 - The `src/utils/watchParty.js` helper is not wired into the app. It imports Firebase, which is not listed in `package.json`; watch parties are not a working feature.
 - Client-side routes such as `/search` need a server fallback to `index.html` when serving a production build. The included Nginx configuration has that fallback.

@@ -2,15 +2,13 @@ import React, { useEffect, useState } from 'react';
 import '../css/TvModal.css';
 import '../css/MoviesList.css';
 import '../css/MovieModal.css';
-import { getShowProgress } from '../../utils/watchProgress';
 import { fetchTmdb, isCanceled } from '../../utils/tmdb';
 import WatchlistButton from '../WatchlistButton';
-import ProgressControls from '../ProgressControls';
+import MarkWatchedButton from '../MarkWatchedButton';
 import Icon from '../Icon';
 
 export default function TvModal({ isOpen, tvShow }) {
-    const [saved] = useState(() => tvShow ? getShowProgress(tvShow.id) : null);
-    const [selection, setSelection] = useState({ season: saved?.lastWatchedSeason || 1, episode: saved?.lastWatchedEpisode || 1 });
+    const [selection, setSelection] = useState({ season: 1, episode: 1 });
     const [totalSeasons, setTotalSeasons] = useState(0);
     const [episodes, setEpisodes] = useState({ season: 0, items: [] });
     const [error, setError] = useState('');
@@ -46,7 +44,6 @@ export default function TvModal({ isOpen, tvShow }) {
     }, [id, isOpen, selection.season, totalSeasons, attempt]);
     const changeSelection = next => { setSelection(next); setPlayerLoaded(false); };
     if (!tvShow) return null;
-    const selectedEpisode = episodes.items.find(item => item.episode_number === selection.episode);
     return <div className="movie-details-container">
             <header className="detail-heading"><h2>{tvShow.name}</h2>
                 <div className="detail-meta"><span>TV show</span><span>Season {selection.season}, episode {selection.episode}</span>
@@ -54,7 +51,7 @@ export default function TvModal({ isOpen, tvShow }) {
                 </div>
             </header>
             <p className="movie-description">{typeof tvShow.overview === 'string' && tvShow.overview ? tvShow.overview : 'No description available.'}</p>
-            <div className="detail-actions"><WatchlistButton item={tvShow} type="tv" /></div>
+            <div className="detail-actions"><WatchlistButton item={tvShow} type="tv" /><MarkWatchedButton id={id} type="tv" /></div>
             {error && <div role="alert"><p>{error}</p><button onClick={() => setAttempt(value => value + 1)}>Retry show details</button></div>}
             {!totalSeasons && !error && <p role="status">Loading show details…</p>}
             {totalSeasons > 0 && <>
@@ -72,8 +69,6 @@ export default function TvModal({ isOpen, tvShow }) {
                     src={`https://vidsrc.to/embed/tv/${id}/${selection.season}/${selection.episode}`}
                     allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen onLoad={() => setPlayerLoaded(true)} /></div>
 
-                <ProgressControls key={`${selection.season}:${selection.episode}:${selectedEpisode?.runtime || ''}`} id={id} type="tv"
-                    season={selection.season} episode={selection.episode} runtime={selectedEpisode?.runtime} />
             </>}
         </div>;
 }

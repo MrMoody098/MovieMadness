@@ -14,7 +14,6 @@ import TvModal from './components/modals/TvModal';
 import HistorySection from './components/HistorySection';
 import useFetchItems from './components/hooks/useFetchItems';
 import { getHistoryIds, recordPlayback, getWatchlist, toggleWatchlist } from './utils/mediaLibrary';
-import { saveWatchProgress, getShowProgress } from './utils/watchProgress';
 
 jest.mock('axios', () => ({ get: jest.fn(), isCancel: jest.fn(() => false) }));
 const movie = { id: 12, title: 'Test Movie', poster_path: null, vote_average: 8, overview: 'A movie.' };
@@ -145,7 +144,7 @@ test('filters restore URL values, update discover requests, and open recommendat
     await screen.findByRole('button', { name: 'Open Test Movie' });
 });
 
-test('watchlist is independent of playback history and persists removal', async () => {
+test('watchlist is independent of viewing history and persists removal', async () => {
     toggleWatchlist(movie, 'movie');
     expect(getWatchlist()).toHaveLength(1);
     expect(getHistoryIds('movie')).toEqual([]);
@@ -155,7 +154,7 @@ test('watchlist is independent of playback history and persists removal', async 
     expect(screen.getByText(/Save titles from their details/)).toBeInTheDocument();
 });
 
-test('history promotes actual playback and survives an individual title fetch failure', async () => {
+test('recently watched deduplicates titles and survives an individual title fetch failure', async () => {
     recordPlayback('movie', 12);
     recordPlayback('movie', 99);
     recordPlayback('movie', 12);
@@ -163,6 +162,8 @@ test('history promotes actual playback and survives an individual title fetch fa
     axios.get.mockImplementation(url => url.endsWith('/movie/99') ? Promise.reject(new Error('Missing title')) : Promise.resolve({ data: movie }));
     await act(async () => { render(<HistorySection type="movie" onSelect={jest.fn()} />); });
     expect(await screen.findByRole('button', { name: 'Open Test Movie' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Recently watched' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Continue watching' })).not.toBeInTheDocument();
     expect(screen.getByText('Some watched titles could not be loaded.')).toBeInTheDocument();
 });
 
@@ -170,14 +171,12 @@ test('corrupt and malformed stored data does not crash the library', () => {
     localStorage.setItem('recentlyWatched', '{broken');
     localStorage.setItem('recentlyWatchedTv', JSON.stringify({ id: 1 }));
     localStorage.setItem('watchlist', JSON.stringify([null, { id: '12', media_type: 'movie' }]));
-    localStorage.setItem('tvWatchProgress', JSON.stringify({ 34: { watchTime: -1, totalDuration: 10 } }));
     expect(getHistoryIds('movie')).toEqual([]);
     expect(getHistoryIds('tv')).toEqual([]);
     expect(getWatchlist()).toEqual([]);
-    expect(getShowProgress(34)).toBeNull();
 });
 
-test('VidSrc is the only player and untrusted messages cannot change history', async () => {
+test('movie history changes only after marking the title watched', async () => {
     await act(async () => { render(<MovieModal movie={movie} onMovieSelect={jest.fn()} />); });
     const frame = screen.getByTitle('Watch Test Movie');
     expect(frame.src).toBe('https://vidsrc.to/embed/movie/12');
@@ -185,33 +184,27 @@ test('VidSrc is the only player and untrusted messages cannot change history', a
     act(() => { window.dispatchEvent(new MessageEvent('message', { origin: 'https://evil.example', source: frame.contentWindow,
         data: { type: 'PLAYER_EVENT', data: { event: 'play', currentTime: 100, duration: 1000 } } })); });
     expect(getHistoryIds('movie')).toEqual([]);
-    fireEvent.click(screen.getByRole('button', { name: 'Continue later' }));
+    expect(screen.queryByText('Save a playback position')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Mark as watched' }));
     expect(getHistoryIds('movie')).toEqual([12]);
-    screen.getByText('Save a playback position').closest('details').open = true;
-    fireEvent.change(screen.getByLabelText('Position (minutes)'), { target: { value: '5' } });
-    fireEvent.change(screen.getByLabelText('Duration (minutes)'), { target: { value: '100' } });
-    fireEvent.submit(screen.getByRole('button', { name: 'Save position' }).closest('form'));
-    expect(JSON.parse(localStorage.getItem('movieProgress_12')).watchTime).toBe(300);
-    expect(screen.getByText(/Position saved at 5:00/)).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Mark movie watched' }));
-    expect(JSON.parse(localStorage.getItem('movieProgress_12')).progressPercentage).toBe(100);
+    expect(screen.getByText('Added to Recently watched.')).toBeInTheDocument();
+    expect(localStorage.getItem('movieProgress_12')).toBeNull();
 });
 
-test('TV Continue Watching restores the saved episode and saves explicit checkpoints', async () => {
-    saveWatchProgress(34, 2, 4, 120, 1200);
+test('TV history is title-only and selecting an episode does not save playback progress', async () => {
     await act(async () => { render(<TvModal isOpen tvShow={tv} onRequestClose={jest.fn()} />); });
-    const frame = await screen.findByTitle('Test Show — S2E4');
-    expect(frame.src).toBe('https://vidsrc.to/embed/tv/34/2/4');
-    expect(screen.getByText(/Saved position: 2:00/)).toBeInTheDocument();
+    const frame = await screen.findByTitle('Test Show — S1E1');
+    expect(frame.src).toBe('https://vidsrc.to/embed/tv/34/1/1');
     await waitFor(() => expect(screen.getByLabelText('Select episode')).not.toBeDisabled());
-    expect(screen.getByLabelText('Select episode')).toHaveValue('4');
+    expect(screen.getByLabelText('Select episode')).toHaveValue('1');
     await act(async () => { fireEvent.change(screen.getByLabelText('Select season'), { target: { value: '3' } }); });
     await waitFor(() => expect(screen.getByLabelText('Select episode')).not.toBeDisabled());
     expect(screen.getByLabelText('Select episode')).toHaveValue('1');
     expect(screen.getByTitle('Test Show — S3E1').src).toBe('https://vidsrc.to/embed/tv/34/3/1');
-    fireEvent.click(screen.getByRole('button', { name: 'Continue later' }));
-    expect(getShowProgress(34)).toMatchObject({ lastWatchedSeason: 3, lastWatchedEpisode: 1, status: 'watching' });
+    expect(getHistoryIds('tv')).toEqual([]);
+    fireEvent.click(screen.getByRole('button', { name: 'Mark as watched' }));
     expect(getHistoryIds('tv')).toEqual([34]);
+    expect(localStorage.getItem('tvWatchProgress')).toBeNull();
 });
 
 test('search suggestions support keyboard selection and dismiss without submitting', async () => {
