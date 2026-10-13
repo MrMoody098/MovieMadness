@@ -43,7 +43,7 @@ That's it! Docker includes everything else.
 ```bash
 docker-compose up --build
 ```
-Open http://localhost:3000
+Open http://localhost:3000. Movie and TV downloads start with the site and save to the host's `~/Downloads` folder.
 
 **Production Mode:**
 ```bash

@@ -9,4 +9,15 @@ services:
     ports:
       - "80:80"
     restart: unless-stopped
-
+  movie-madness-downloads:
+    image: node:22-bookworm-slim
+    command: node /scripts/torlnk-bridge.js
+    ports:
+      - "127.0.0.1:3001:3001"
+    volumes:
+      - ./scripts:/scripts:ro
+      - ${HOME}/Downloads:/downloads
+    environment:
+      - MOVIEMADNESS_BRIDGE_HOST=0.0.0.0
+      - MOVIEMADNESS_DOWNLOAD_DIR=/downloads
+    restart: unless-stopped

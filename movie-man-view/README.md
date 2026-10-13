@@ -8,6 +8,12 @@ A React movie and TV browser with TMDB discovery, unified search and suggestions
 2. Copy `.env.example` to `.env.local` and set `REACT_APP_TMDB_API_KEY` to your TMDB API key.
 3. Run `npm start`.
 
+## Local movie downloads
+
+`npm start` now starts the site and the local download bridge together. Open a movie or TV episode and choose **Find downloads**. For TV, the search starts with the selected season and episode; edit the search term to find a season pack if needed. The bridge runs on `127.0.0.1:3001`, searches with `npx torlnk`, and starts Torlink's downloader on `127.0.0.1:9161` when you select a result. Torlink saves the file in its configured downloads folder on your computer and continues downloading while the site is running. The first search can take longer while `npx` installs Torlink.
+
+With Docker Compose, the bridge starts with either the development or production site and saves files to your host `~/Downloads` folder. The browser must run on the same computer. If you serve the site from another origin, set `MOVIEMADNESS_ORIGIN` to that exact origin when starting the bridge. The bridge listens only on your computer for a normal `npm start`; Docker publishes its port on host loopback. A static site hosted elsewhere cannot start a program on a visitor's computer, so a remote deployment still needs a local bridge. Use downloads you have permission to obtain.
+
 For deployment, configure the same environment variable before running `npm run build`. Serve `build/` with a fallback to `index.html` for client-side routes such as `/search` and `/watchlist`.
 
 ## Verification

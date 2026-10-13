@@ -6,6 +6,7 @@ import { fetchTmdb, isCanceled } from '../../utils/tmdb';
 import WatchlistButton from '../WatchlistButton';
 import MarkWatchedButton from '../MarkWatchedButton';
 import Icon from '../Icon';
+import MovieDownloads from '../MovieDownloads';
 
 export default function TvModal({ isOpen, tvShow }) {
     const [selection, setSelection] = useState({ season: 1, episode: 1 });
@@ -52,6 +53,7 @@ export default function TvModal({ isOpen, tvShow }) {
             </header>
             <p className="movie-description">{typeof tvShow.overview === 'string' && tvShow.overview ? tvShow.overview : 'No description available.'}</p>
             <div className="detail-actions"><WatchlistButton item={tvShow} type="tv" /><MarkWatchedButton id={id} type="tv" /></div>
+            {totalSeasons > 0 && <MovieDownloads title={tvShow.name} category="tv" searchQuery={`${tvShow.name} S${String(selection.season).padStart(2, '0')}E${String(selection.episode).padStart(2, '0')}`} />}
             {error && <div role="alert"><p>{error}</p><button onClick={() => setAttempt(value => value + 1)}>Retry show details</button></div>}
             {!totalSeasons && !error && <p role="status">Loading show details…</p>}
             {totalSeasons > 0 && <>

@@ -191,6 +191,38 @@ test('movie history changes only after marking the title watched', async () => {
     expect(localStorage.getItem('movieProgress_12')).toBeNull();
 });
 
+test('movie downloads search locally and queue the selected Torlink result', async () => {
+    const originalFetch = global.fetch;
+    const magnet = 'magnet:?xt=urn:btih:0123456789abcdef0123456789abcdef01234567';
+    global.fetch = jest.fn()
+        .mockResolvedValueOnce({ ok: true, json: async () => ({ results: [{ infoHash: 'abc', name: 'Test Movie 2020',
+            sizeBytes: 1073741824, seeders: 12, source: 'yts', magnet }] }) })
+        .mockResolvedValueOnce({ ok: true, json: async () => ({ ok: true, outcome: 'added' }) });
+    try {
+        await act(async () => { render(<MovieModal movie={{ ...movie, release_date: '2020-01-01' }} onMovieSelect={jest.fn()} />); });
+        fireEvent.click(screen.getByRole('button', { name: 'Find downloads' }));
+        expect(await screen.findByText('Test Movie 2020')).toBeInTheDocument();
+        expect(global.fetch.mock.calls[0][0]).toBe('http://127.0.0.1:3001/search?query=Test%20Movie%202020&category=movies');
+        fireEvent.click(screen.getByRole('button', { name: 'Download' }));
+        expect(await screen.findByText('Download added to Torlink on this computer.')).toBeInTheDocument();
+        expect(JSON.parse(global.fetch.mock.calls[1][1].body)).toEqual({ magnet });
+    } finally { global.fetch = originalFetch; }
+});
+
+test('TV episode downloads use the selected episode and TV category', async () => {
+    const originalFetch = global.fetch;
+    global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ results: [] }) });
+    try {
+        await act(async () => { render(<TvModal isOpen tvShow={tv} />); });
+        await waitFor(() => expect(screen.getByLabelText('Select episode')).not.toBeDisabled());
+        fireEvent.change(screen.getByLabelText('Select episode'), { target: { value: '3' } });
+        fireEvent.click(screen.getByRole('button', { name: 'Find downloads' }));
+        await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+        expect(global.fetch.mock.calls[0][0]).toBe('http://127.0.0.1:3001/search?query=Test%20Show%20S01E03&category=tv');
+        expect(await screen.findByText('No downloads found. Try a different search term.')).toBeInTheDocument();
+    } finally { global.fetch = originalFetch; }
+});
+
 test('TV history is title-only and selecting an episode does not save playback progress', async () => {
     await act(async () => { render(<TvModal isOpen tvShow={tv} onRequestClose={jest.fn()} />); });
     const frame = await screen.findByTitle('Test Show — S1E1');

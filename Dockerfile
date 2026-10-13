@@ -1,5 +1,5 @@
 # Use the official Node.js image
-FROM node:18-alpine
+FROM node:22-bookworm-slim
 
 # Create and set the working directory inside the container
 WORKDIR /app
@@ -12,9 +12,10 @@ RUN npm install
 
 # Copy the rest of the application code
 COPY movie-man-view/ ./
+COPY scripts/ /scripts/
 
 # Expose the port the app will run on
-EXPOSE 3000
+EXPOSE 3000 3001
 
 # Set environment variable to avoid watch issues in Docker
 ENV CHOKIDAR_USEPOLLING=true

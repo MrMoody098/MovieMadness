@@ -8,6 +8,19 @@
 .player-frame { position: relative; width: 100%; aspect-ratio: 16 / 9; overflow: hidden; background: #000; border-radius: 6px; margin-top: 18px; }
 .player-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
 .movie-details-container > [role="status"] { font-size: 12px; color: var(--muted); }
+.movie-downloads { margin: 18px 0; }
+.movie-downloads-panel { margin-top: 12px; padding: 16px; border: 1px solid var(--border); border-radius: 6px; background: var(--page); }
+.movie-downloads-panel > p { margin: 0 0 12px; color: var(--muted); font-size: 13px; }
+.movie-downloads-panel label { display: block; margin-bottom: 12px; color: var(--muted); font-size: 13px; }
+.movie-downloads-panel input { display: block; width: 100%; margin-top: 5px; padding: 9px; color: var(--text); background: var(--page); border: 1px solid var(--border); border-radius: 4px; }
+.movie-downloads-panel form { margin-bottom: 14px; }
+.movie-downloads-panel [role="alert"] { color: #ff9c9c; }
+.movie-downloads-panel ul { list-style: none; margin: 0; padding: 0; }
+.movie-downloads-panel li { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 12px 0; border-top: 1px solid var(--border); }
+.movie-downloads-panel li:first-child { border-top: 0; }
+.movie-downloads-panel li strong { display: block; font-size: 13px; overflow-wrap: anywhere; }
+.movie-downloads-panel li small { display: block; margin-top: 4px; color: var(--muted); }
+.movie-downloads-panel li button { flex: none; }
 .movie-details-container .carousel { grid-auto-columns: calc((100% - 72px) / 5); gap: 18px; }
 @media (max-width: 700px) { .movie-details-container .carousel { grid-auto-columns: 28%; gap: 14px; } }
 @media (max-width: 480px) {
