@@ -1,137 +1,58 @@
 # MovieMadness
 
-A React app to browse trending movies and TV shows with trailers from The Movie Database (TMDb).
+MovieMadness is a React app for developers who want to browse TMDb movies and TV shows, search titles, and keep a watchlist in their browser.
 
-![MovieMadness Screenshot](https://github.com/user-attachments/assets/47512291-1a96-4c52-bad3-2b108b36f119)
+## Quickstart / Installation
 
----
-
-## Quick Start (Running in Cursor or Your Computer)
-
-### Step 1: Open the Project in Cursor
-
-1. Open **Cursor** (download from https://cursor.sh if you don't have it)
-2. Click **File** → **Open Folder**
-3. Select the **MovieMadness** folder
-4. Cursor will open the project
-
-### Step 2: Open the Terminal
-
-1. In Cursor, click **Terminal** at the top menu
-2. Select **New Terminal**
-3. A terminal window will appear at the bottom
-
-### Step 3: Install Dependencies
-
-In the terminal, type these commands one at a time and press Enter:
+From the repository root, with Node.js and npm installed:
 
 ```bash
 cd movie-man-view
-npm install
+npm ci
+cp .env.example .env.local
 ```
 
-Wait for it to finish (you'll see lots of text, that's normal!)
-
-### Step 4: Start the App
-
-In the same terminal, type:
+Edit `.env.local` and replace `your_tmdb_api_key` with a [TMDb API key](https://www.themoviedb.org/settings/api). Then start the development server:
 
 ```bash
 npm start
 ```
 
-### Step 5: Open in Your Browser
+Open <http://localhost:3000>. For a production build, run `npm run build` from `movie-man-view/` with the same environment variable set.
 
-The app will automatically open in your browser at:
-**http://localhost:3000**
+## Minimal usage example
 
-If it doesn't open automatically, just copy that address into your browser.
+With the server running, open this URL to search for a real title:
 
-** That's it! The app is running!**
-
----
-
-## How to Stop the App
-
-In the terminal where it's running:
-- Press **Ctrl + C** (hold Ctrl and press C)
-- The app will stop
-
----
-
-## What You Need Installed
-
-Before starting, make sure you have:
-
-1. **Node.js** - Download from https://nodejs.org (get the LTS version)
-2. **Cursor** - Download from https://cursor.sh (or use VS Code)
-
-That's all you need!
-
----
-
-## Getting a Movie Database API Key (Optional)
-
-The app uses the TMDb API to get movie data. To get your own API key:
-
-1. Go to https://www.themoviedb.org/
-2. Click **Sign Up** and create a free account
-3. Go to **Settings** → **API** → **Request API Key**
-4. Choose **Developer** and fill out the form
-5. You'll get an API key
-
-To use it in the app:
-1. Open the file where the API key is used (usually in `src` folder)
-2. Replace the existing API key with yours
-
----
-
-## Project Structure
-
-```
-MovieMadness/
-  ├── movie-man-view/          ← Main app folder
-  │   ├── src/                 ← Source code
-  │   │   ├── components/      ← UI components
-  │   │   ├── App.js          ← Main app file
-  │   │   └── index.js        ← Entry point
-  │   ├── public/             ← Static files
-  │   └── package.json        ← Dependencies
-  └── README.md               ← This file!
+```text
+http://localhost:3000/search?q=Arrival
 ```
 
----
+Select a result to see its details. **Add to watchlist** saves that title in this browser. You can also open `/explore` to browse by media type, genre, or collection; those choices stay in the URL.
 
-## Troubleshooting
+## Why this exists
 
-### "npm: command not found" or "node: command not found"
-→ You need to install Node.js from https://nodejs.org
+TMDb provides catalog data, but browsing its API directly means assembling separate search, discovery, and detail requests. This app puts those requests behind one browser UI and keeps a small personal watchlist and viewing history in `localStorage`. Movie and TV playback is embedded from VidSrc; TMDb supplies the metadata, not the video.
 
-### Port 3000 is already in use
-→ Another app is using port 3000. Stop that app or the terminal will suggest a different port
+## Configuration / Options
 
-### Changes aren't showing up
-→ Make sure the terminal is still running `npm start`. If you made code changes, save the file and it will automatically refresh
+| Setting | Where | Purpose |
+| --- | --- | --- |
+| `REACT_APP_TMDB_API_KEY` | `movie-man-view/.env.local` | Required for TMDb search, discovery, and details. The app shows an error when it is missing. |
+| Port | `npm start` | The development server uses port 3000 by default and prompts for another port if it is occupied. |
 
-### Nothing happens when I type `npm start`
-→ Make sure you're in the correct folder. Type `cd movie-man-view` first
+Environment variables prefixed with `REACT_APP_` are included in the browser bundle. Treat the TMDb key as a client-side API key, not a server secret. Restart the development server after changing `.env.local`.
 
----
+The root `docker-compose.yml` and `docker-compose.prod.yml` provide container setups; see [DOCKER_README.md](DOCKER_README.md). For the production image, create `movie-man-view/.env.local` before building. The key is baked into the React bundle, so changing a container environment variable afterward has no effect.
 
-## Want to Use Docker Instead?
+## Gotchas / Limitations
 
-If you want to run this app in a Docker container, see [DOCKER_README.md](DOCKER_README.md)
+- Watchlist, history, and saved positions live in browser storage. They do not sync between devices, and clearing site data removes them.
+- Playback position is entered manually. The embedded VidSrc player does not expose a seek or playback event API to this app, so a saved timestamp is shown for you to seek to with the player controls.
+- Search and catalog pages need access to TMDb. Embedded playback also depends on VidSrc being reachable and serving the selected title.
+- The `src/utils/watchParty.js` helper is not wired into the app. It imports Firebase, which is not listed in `package.json`; watch parties are not a working feature.
+- Client-side routes such as `/search` need a server fallback to `index.html` when serving a production build. The included Nginx configuration has that fallback.
 
-Docker is great for deployment but not necessary for local development.
+## License
 
----
-
-## Features
-
--  Browse trending movies and TV shows
--  Search for movies by title
--  Watch trailers
--  View movie details, ratings, and desriptions
--  Modern, responsive design
-
----
+No license file is included. Check with the repository owner before reusing or distributing the code.
