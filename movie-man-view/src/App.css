@@ -66,6 +66,8 @@ h3 { font-size: 16px; font-weight: 550; }
 .page-heading h1 { overflow-wrap: anywhere; }
 .page-heading p { color: #e1e3e7; font-size: 15px; margin: 0; }
 .page-heading .button-link { flex-shrink: 0; }
+.page-heading .button-link.secondary { background: var(--accent); border-color: var(--accent); color: var(--page); font-weight: 700; text-shadow: none; }
+.page-heading .button-link.secondary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
 .navbar { position: fixed; top: 0; inset-inline: 0; z-index: 1000; height: 80px; background: var(--nav); border-bottom: 1px solid var(--border); }
 .navbar[hidden] { display: none; }
 .navbar-content { max-width: 1600px; height: 100%; margin: auto; padding: 0 var(--gutter); display: flex; align-items: center; gap: 40px; }
