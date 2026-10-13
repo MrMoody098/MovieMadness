@@ -1,9 +1,9 @@
 .filter-header { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px; }
-.filter-header label { display: flex; flex-direction: column; gap: 8px; color: var(--muted); font-size: 12px; min-width: 0; }
+.filter-header label { display: flex; flex-direction: column; gap: 8px; color: #e1e3e7; font-size: 12px; min-width: 0; }
 .filter-header select, .filter-header input { padding: 10px 12px; border-radius: 5px; border: 1px solid var(--border); background: var(--surface); color: var(--text); width: 100%; min-width: 0; font-size: 14px; }
 .filter-header input::placeholder { color: var(--muted); }
-.advanced-filters { border-bottom: 1px solid var(--border); margin: 12px 0 30px; padding-bottom: 18px; }
-.advanced-filters summary { width: fit-content; color: var(--muted); font-size: 13px; cursor: pointer; padding: 10px 0; }
+.advanced-filters { border-bottom: 1px solid rgba(255, 255, 255, .4); margin: 12px 0 30px; padding-bottom: 18px; }
+.advanced-filters summary { width: fit-content; color: #e1e3e7; font-size: 13px; cursor: pointer; padding: 10px 0; }
 .advanced-filters[open] summary { margin-bottom: 14px; color: var(--text); }
 .advanced-filters .filter-header { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 @media (max-width: 1000px) { .filter-header { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
