@@ -19,6 +19,11 @@ function App() {
     }, []);
     return <Router>
         <div className="App">
+            <div className="page-background" aria-hidden="true">
+                <video autoPlay muted loop playsInline preload="metadata">
+                    <source src="/12446814_1920_1080_30fps.mp4" type="video/mp4" />
+                </video>
+            </div>
             <a className="skip-link" href="#main-content">Skip to content</a>
             {storageError && <div className="storage-error" role="alert">{storageError} <button onClick={() => setStorageError('')}>Dismiss</button></div>}
             <main id="main-content" tabIndex={-1}>
