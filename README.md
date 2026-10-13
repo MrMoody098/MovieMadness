@@ -2,6 +2,9 @@
 
 MovieMadness is a React app for developers who want to browse TMDb movies and TV shows, search titles, and keep a watchlist in their browser.
 
+<img width="1918" height="924" alt="Screenshot from 2026-10-13 20-05-48" src="https://github.com/user-attachments/assets/083003f6-a9ab-4f9d-8b2c-c79918578991" />
+
+
 ## Quickstart / Installation
 
 From the repository root, with Node.js and npm installed:
