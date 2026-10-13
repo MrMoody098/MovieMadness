@@ -55,7 +55,3 @@ The root `docker-compose.yml` and `docker-compose.prod.yml` provide container se
 - Search and catalog pages need access to TMDb. Embedded playback also depends on VidSrc being reachable and serving the selected title.
 - The `src/utils/watchParty.js` helper is not wired into the app. It imports Firebase, which is not listed in `package.json`; watch parties are not a working feature.
 - Client-side routes such as `/search` need a server fallback to `index.html` when serving a production build. The included Nginx configuration has that fallback.
-
-## License
-
-No license file is included. Check with the repository owner before reusing or distributing the code.
