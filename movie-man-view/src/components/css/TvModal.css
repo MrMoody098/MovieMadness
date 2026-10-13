@@ -1,3 +1,7 @@
 .controls { display: grid; grid-template-columns: minmax(100px, 1fr) minmax(0, 3fr); gap: 16px; margin: 22px 0 18px; }
 .controls label { display: grid; gap: 7px; color: var(--muted); font-size: 12px; }
 .controls select { width: 100%; min-width: 0; padding: 10px; border-radius: 5px; background: var(--surface); color: var(--text); border: 1px solid var(--border); font-size: 14px; }
+@media (max-width: 700px) { .controls select { font-size: 16px; } }
+@media (max-width: 480px) {
+    .controls { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+}

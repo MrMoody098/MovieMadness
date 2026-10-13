@@ -73,7 +73,7 @@ const NavBar = ({ isModalOpen = false }) => {
             <form ref={formRef} className="search-form" role="search" onSubmit={handleSearch}
                 onBlur={event => { if (!formRef.current?.contains(event.relatedTarget)) setFocused(false); }}>
                 <label className="visually-hidden" htmlFor="site-search">Search movies and TV shows</label>
-                <input id="site-search" type="search" className="search-bar" placeholder="Search movies & TV"
+                <input id="site-search" type="search" className="search-bar" placeholder="Search titles"
                     role="combobox" aria-autocomplete="list" aria-expanded={showSuggestions}
                     aria-controls="search-suggestions" aria-activedescendant={showSuggestions && activeSuggestion >= 0 ? `search-suggestion-${activeSuggestion}` : undefined}
                     autoComplete="off" value={query} onFocus={() => setFocused(true)} onKeyDown={handleSearchKey}

@@ -202,9 +202,9 @@ test('movie downloads search locally and queue the selected Torlink result', asy
         await act(async () => { render(<MovieModal movie={{ ...movie, release_date: '2020-01-01' }} onMovieSelect={jest.fn()} />); });
         fireEvent.click(screen.getByRole('button', { name: 'Find downloads' }));
         expect(await screen.findByText('Test Movie 2020')).toBeInTheDocument();
-        expect(global.fetch.mock.calls[0][0]).toBe('http://127.0.0.1:3001/search?query=Test%20Movie%202020&category=movies');
+        expect(global.fetch.mock.calls[0][0]).toBe('/local-downloads/search?query=Test%20Movie%202020&category=movies');
         fireEvent.click(screen.getByRole('button', { name: 'Download' }));
-        expect(await screen.findByText('Download added to Torlink on this computer.')).toBeInTheDocument();
+        expect(await screen.findByText('Download added to Torlink on the computer running MovieMadness.')).toBeInTheDocument();
         expect(JSON.parse(global.fetch.mock.calls[1][1].body)).toEqual({ magnet });
     } finally { global.fetch = originalFetch; }
 });
@@ -218,7 +218,7 @@ test('TV episode downloads use the selected episode and TV category', async () =
         fireEvent.change(screen.getByLabelText('Select episode'), { target: { value: '3' } });
         fireEvent.click(screen.getByRole('button', { name: 'Find downloads' }));
         await waitFor(() => expect(global.fetch).toHaveBeenCalled());
-        expect(global.fetch.mock.calls[0][0]).toBe('http://127.0.0.1:3001/search?query=Test%20Show%20S01E03&category=tv');
+        expect(global.fetch.mock.calls[0][0]).toBe('/local-downloads/search?query=Test%20Show%20S01E03&category=tv');
         expect(await screen.findByText('No downloads found. Try a different search term.')).toBeInTheDocument();
     } finally { global.fetch = originalFetch; }
 });

@@ -53,6 +53,8 @@
     .section-heading { gap: 8px; }
     .section-actions { gap: 0; }
     .section-actions .text-button { font-size: 12px; }
+    .rail-controls .icon-button, .watchlist-remove { min-height: 44px; }
+    .rail-controls .icon-button { width: 44px; }
 }
 @media (prefers-reduced-motion: reduce) {
     .movie-poster img, .poster-action { transition: none; }

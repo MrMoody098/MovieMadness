@@ -23,7 +23,10 @@
 .movie-downloads-panel li button { flex: none; }
 .movie-details-container .carousel { grid-auto-columns: calc((100% - 72px) / 5); gap: 18px; }
 @media (max-width: 700px) { .movie-details-container .carousel { grid-auto-columns: 28%; gap: 14px; } }
+@media (max-width: 700px) { .movie-downloads-panel input { font-size: 16px; } }
 @media (max-width: 480px) {
     .movie-details-container .carousel { grid-auto-columns: 42%; }
     .movie-description { font-size: 13px; }
+    .movie-downloads-panel li { align-items: stretch; flex-direction: column; gap: 10px; }
+    .movie-downloads-panel li button { align-self: flex-start; }
 }

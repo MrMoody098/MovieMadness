@@ -12,8 +12,9 @@
 .genre-error { color: #e1e3e7; text-shadow: 0 1px 2px #000, 0 2px 6px #000; }
 @media (max-width: 600px) {
     .explore-sort { flex-direction: column; align-items: flex-start; gap: 4px; font-size: 12px; }
-    .explore-sort select { min-height: 38px; font-size: 13px; max-width: 160px; }
+    .explore-sort select { min-height: 44px; max-width: 180px; }
     .genre-picker { flex-wrap: nowrap; overflow-x: auto; padding: 4px 2px 12px; margin: -4px -2px 20px; }
-    .genre-picker button { flex-shrink: 0; }
+    .genre-picker button { flex-shrink: 0; min-height: 44px; }
     .explore-results-heading h2 { font-size: 20px; }
 }
+@media (max-width: 700px) { .explore-sort select { font-size: 16px; } }

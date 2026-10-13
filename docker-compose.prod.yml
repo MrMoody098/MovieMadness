@@ -8,6 +8,8 @@ services:
     container_name: movie-madness-prod
     ports:
       - "80:80"
+    depends_on:
+      - movie-madness-downloads
     restart: unless-stopped
   movie-madness-downloads:
     image: node:22-bookworm-slim

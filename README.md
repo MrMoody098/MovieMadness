@@ -24,6 +24,7 @@ npm start
 Open <http://localhost:3000>. For a production build, run `npm run build` from `movie-man-view/` with the same environment variable set.
 
 `npm start` also starts the local Torlink download bridge. Open a movie or TV episode and choose **Find downloads**; selected files download to this computer. The development Docker Compose setup maps the download folder to `~/Downloads`.
+On a phone on the same Wi-Fi, open the site at `http://<computer-ip>:3000`. Download requests go through the site and save on the computer.
 
 ## Minimal usage example
 

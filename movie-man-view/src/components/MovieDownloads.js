@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 
-const BRIDGE = 'http://127.0.0.1:3001';
+const BRIDGE = '/local-downloads';
 
 function sizeLabel(bytes) {
     if (!Number.isFinite(bytes) || bytes <= 0) return 'Size unknown';
@@ -34,14 +34,14 @@ export default function MovieDownloads({ title, searchQuery, category = 'movies'
         setStatus('Searching Torlink…');
         fetch(`${BRIDGE}/search?query=${encodeURIComponent(query)}&category=${category}`, { signal: controller.signal })
             .then(async response => {
-                const data = await response.json();
-                if (!response.ok) throw new Error(data.error || 'Search failed.');
+                const data = await response.json().catch(() => null);
+                if (!response.ok || !Array.isArray(data?.results)) throw new Error(data?.error || 'Downloads are unavailable. Restart the site on your computer.');
                 return data;
             })
             .then(data => { setResults(data.results); setStatus(data.results.length ? '' : 'No downloads found. Try a different search term.'); })
             .catch(failure => {
                 if (controller.signal.aborted) return;
-                setError(failure instanceof TypeError ? 'Local downloads are offline. Restart the site with npm start.' : failure.message);
+                setError(failure instanceof TypeError ? 'Downloads are offline. Restart the site on your computer.' : failure.message);
                 setStatus('');
             })
             .finally(() => { if (!controller.signal.aborted) setBusy(false); });
@@ -56,12 +56,12 @@ export default function MovieDownloads({ title, searchQuery, category = 'movies'
             const response = await fetch(`${BRIDGE}/download`, {
                 method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ magnet: result.magnet })
             });
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.error || 'Download could not start.');
+            const data = await response.json().catch(() => null);
+            if (!response.ok || !data?.ok) throw new Error(data?.error || 'Download could not start.');
             setStatus(data.status === 'duplicate' || data.outcome === 'duplicate'
-                ? 'Already in your Torlink downloads.' : 'Download added to Torlink on this computer.');
+                ? 'Already in your Torlink downloads.' : 'Download added to Torlink on the computer running MovieMadness.');
         } catch (failure) {
-            setError(failure instanceof TypeError ? 'Local downloads are offline. Restart the site with npm start.' : failure.message);
+            setError(failure instanceof TypeError ? 'Downloads are offline. Restart the site on your computer.' : failure.message);
             setStatus('');
         } finally { setSelected(''); }
     }
@@ -71,7 +71,7 @@ export default function MovieDownloads({ title, searchQuery, category = 'movies'
             {open ? 'Hide downloads' : 'Find downloads'}
         </button>
         {open && <div className="movie-downloads-panel">
-            <p>Choose a result to download on this computer with Torlink.</p>
+            <p>Choose a result to download on the computer running MovieMadness.</p>
             <form onSubmit={event => { event.preventDefault(); if (draftQuery.trim()) setQuery(draftQuery.trim()); }}>
                 <label>Search term<input value={draftQuery} onChange={event => setDraftQuery(event.target.value)} /></label>
                 <button type="submit" disabled={!draftQuery.trim() || busy}>Search</button>
