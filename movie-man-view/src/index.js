@@ -10,3 +10,11 @@ root.render(
     <App />
   </React.StrictMode>
 );
+
+if (process.env.NODE_ENV === 'production' && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register(`${process.env.PUBLIC_URL || ''}/service-worker.js`).catch(error => {
+      console.error('MovieMan service worker registration failed:', error);
+    });
+  });
+}

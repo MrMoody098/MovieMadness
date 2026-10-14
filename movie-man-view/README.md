@@ -16,6 +16,12 @@ With Docker Compose, the bridge starts with either the development or production
 
 For deployment, configure the same environment variable before running `npm run build`. Serve `build/` with a fallback to `index.html` for client-side routes such as `/search` and `/watchlist`.
 
+## Install as a web app
+
+Build and serve the app over HTTPS (or open it at `localhost` for local testing). Open the site in Chrome or Edge and choose **Install MovieMan** from the address bar or browser menu. On iPhone or iPad, open it in Safari, tap **Share**, then **Add to Home Screen**.
+
+The installed app has its own window and caches its shell for offline launch. Movie and TV data still needs an internet connection. Keep the manifest, service worker, and icons in the deployed `build/` directory, and keep the route fallback described above.
+
 ## Verification
 
 - `CI=true npm test -- --watchAll=false --runInBand`
