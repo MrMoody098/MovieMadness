@@ -8,7 +8,7 @@ import MarkWatchedButton from '../MarkWatchedButton';
 import Icon from '../Icon';
 import MovieDownloads from '../MovieDownloads';
 
-export default function TvModal({ isOpen, tvShow }) {
+export default function TvModal({ isOpen, tvShow, playerOrigin = 'https://vidsrc.to' }) {
     const [selection, setSelection] = useState({ season: 1, episode: 1 });
     const [totalSeasons, setTotalSeasons] = useState(0);
     const [episodes, setEpisodes] = useState({ season: 0, items: [] });
@@ -68,7 +68,7 @@ export default function TvModal({ isOpen, tvShow }) {
                 </div>
                 {!playerLoaded && <p role="status">Loading player…</p>}
                 <div className="player-frame"><iframe title={`${tvShow.name} — S${selection.season}E${selection.episode}`}
-                    src={`https://vidsrc.to/embed/tv/${id}/${selection.season}/${selection.episode}`}
+                    src={`${playerOrigin}/embed/tv/${id}/${selection.season}/${selection.episode}`}
                     allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen onLoad={() => setPlayerLoaded(true)} /></div>
 
             </>}

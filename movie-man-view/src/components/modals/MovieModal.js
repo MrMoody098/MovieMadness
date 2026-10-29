@@ -7,7 +7,7 @@ import WatchlistButton from '../WatchlistButton';
 import MarkWatchedButton from '../MarkWatchedButton';
 import MovieDownloads from '../MovieDownloads';
 
-export default function MovieModal({ movie, onMovieSelect }) {
+export default function MovieModal({ movie, onMovieSelect, playerOrigin = 'https://vidsrc.to' }) {
     const [playerLoaded, setPlayerLoaded] = useState(false);
     return <div className="movie-details-container">
         <header className="detail-heading"><h2>{movie.title}</h2>
@@ -19,7 +19,7 @@ export default function MovieModal({ movie, onMovieSelect }) {
         <div className="detail-actions"><WatchlistButton item={movie} type="movie" /><MarkWatchedButton id={movie.id} type="movie" /></div>
         <MovieDownloads title={movie.title} searchQuery={`${movie.title}${/^\d{4}$/.test(movie.release_date?.slice(0, 4)) ? ` ${movie.release_date.slice(0, 4)}` : ''}`} />
         {!playerLoaded && <p role="status">Loading player…</p>}
-        <div className="player-frame"><iframe src={`https://vidsrc.to/embed/movie/${movie.id}`} title={`Watch ${movie.title}`}
+        <div className="player-frame"><iframe src={`${playerOrigin}/embed/movie/${movie.id}`} title={`Watch ${movie.title}`}
             allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen onLoad={() => setPlayerLoaded(true)} /></div>
         <Carousel heading="More like this" endpoint={`movie/${movie.id}/recommendations`} onSelect={onMovieSelect} />
     </div>;

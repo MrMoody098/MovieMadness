@@ -70,6 +70,8 @@ h3 { font-size: 16px; font-weight: 550; }
 .page-heading .button-link.secondary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
 .navbar { position: fixed; top: 0; inset-inline: 0; z-index: 1000; height: 80px; background: var(--nav); border-bottom: 1px solid var(--border); }
 .navbar[hidden] { display: none; }
+.random-picker { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 12px; margin-bottom: 20px; }
+.random-picker p { margin: 0; color: var(--muted); font-size: 13px; }
 .navbar-content { max-width: 1600px; height: 100%; margin: auto; padding: 0 var(--gutter); display: flex; align-items: center; gap: 40px; }
 .logo { color: var(--text); font-family: Georgia, 'Times New Roman', serif; font-size: 25px; font-weight: 700; letter-spacing: -.04em; white-space: nowrap; }
 .logo span { color: var(--accent); }

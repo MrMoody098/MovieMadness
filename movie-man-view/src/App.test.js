@@ -9,6 +9,7 @@ import MoviesList from './components/pages/MoviesList';
 import Filter from './components/pages/Filter';
 import ExploreAll from './components/pages/ExploreAll';
 import MediaDetails from './components/MediaDetails';
+import RandomPick from './components/RandomPick';
 import MovieModal from './components/modals/MovieModal';
 import TvModal from './components/modals/TvModal';
 import HistorySection from './components/HistorySection';
@@ -53,6 +54,118 @@ function Location() {
     const location = useLocation();
     return <output data-testid="location">{location.pathname}{location.search}</output>;
 }
+
+describe('random picks with confirmed media', () => {
+    let originalFetch;
+    beforeEach(() => {
+        originalFetch = global.fetch;
+        global.fetch = jest.fn(async url => {
+            const parts = new URL(url).pathname.split('/');
+            const type = parts[2];
+            return { ok: true, json: async () => ({ status_code: 200, type: type === 'tv' ? 'episode' : 'movie',
+                tmdb_id: parts[3].replace('.json', ''), quality: '1080p', season: 1, episode: 1 }) };
+        });
+    });
+    afterEach(() => { global.fetch = originalFetch; });
+
+test.each(['movie', 'tv'])('random picker opens a %s from a random catalog page', async type => {
+    const random = jest.spyOn(Math, 'random').mockReturnValueOnce(type === 'movie' ? 0.1 : 0.9)
+        .mockReturnValueOnce(0.5).mockReturnValueOnce(0.9);
+    const chosen = type === 'movie' ? movie : tv;
+    axios.get.mockImplementation((url, { params }) => {
+        if (url.includes('/discover/')) return Promise.resolve(response(params.page === 1
+            ? [{ ...chosen, id: 99 }] : [null, { id: -1 }, chosen], 1000));
+        if (url.endsWith('/tv/34')) return Promise.resolve({ data: { ...tv, number_of_seasons: 1 } });
+        if (url.includes('/season/')) return Promise.resolve({ data: { episodes: [{ episode_number: 1 }] } });
+        return Promise.resolve(response([]));
+    });
+    try {
+        render(<RandomPick />);
+        await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Pick something random' })); });
+        expect(await screen.findByRole('heading', { name: chosen.title || chosen.name })).toBeInTheDocument();
+        const frame = await screen.findByTitle(type === 'movie' ? 'Watch Test Movie' : 'Test Show — S1E1');
+        expect(frame.src).toBe(`https://vidsrc.tw/embed/${type}/${chosen.id}${type === 'tv' ? '/1/1' : ''}`);
+        expect(global.fetch.mock.calls[0][0]).toBe(`https://vidsrc.tw/info/${type}/${chosen.id}${type === 'tv' ? '/1/1' : ''}.json`);
+        const requests = axios.get.mock.calls.filter(([url]) => url.endsWith(`/discover/${type}`));
+        expect(requests.map(([, config]) => config.params.page)).toEqual([1, 251]);
+        expect(requests[0][1].params.include_adult).toBe(false);
+        expect(getHistoryIds(type)).toEqual([]);
+        await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Close' })); });
+        expect(screen.getByRole('button', { name: 'Pick something random' })).toBeEnabled();
+        expect(document.body).not.toHaveClass('ReactModal__Body--open');
+    } finally { random.mockRestore(); }
+});
+
+test('random picker prevents duplicate requests and can retry after a failure', async () => {
+    let rejectRequest;
+    axios.get.mockImplementationOnce(() => new Promise((resolve, reject) => { rejectRequest = reject; }));
+    render(<RandomPick />);
+    fireEvent.click(screen.getByRole('button', { name: 'Pick something random' }));
+    const pending = screen.getByRole('button', { name: 'Checking media…' });
+    expect(pending).toBeDisabled();
+    fireEvent.click(pending);
+    expect(axios.get).toHaveBeenCalledTimes(1);
+    await act(async () => { rejectRequest(new Error('Offline')); });
+    expect(screen.getByRole('alert')).toHaveTextContent('Could not pick a title. Please try again.');
+    axios.get.mockResolvedValue(response([]));
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Pick something random' })); });
+    expect(axios.get).toHaveBeenCalledTimes(2);
+    expect(screen.getByRole('alert')).toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+});
+
+test('leaving the random picker aborts its pending request', () => {
+    axios.get.mockImplementation(() => new Promise(() => {}));
+    const view = render(<RandomPick />);
+    fireEvent.click(screen.getByRole('button', { name: 'Pick something random' }));
+    const signal = axios.get.mock.calls[0][1].signal;
+    view.unmount();
+    expect(signal.aborted).toBe(true);
+});
+
+test('random picker skips unavailable media and only opens the confirmed candidate', async () => {
+    const random = jest.spyOn(Math, 'random').mockReturnValueOnce(0).mockReturnValueOnce(0)
+        .mockReturnValueOnce(0).mockReturnValueOnce(0);
+    axios.get.mockResolvedValue(response([movie, { ...movie, id: 13, title: 'Available Movie' }]));
+    global.fetch.mockResolvedValueOnce({ ok: false, status: 404 });
+    try {
+        render(<RandomPick />);
+        await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Pick something random' })); });
+        expect(await screen.findByRole('heading', { name: 'Available Movie', level: 2 })).toBeInTheDocument();
+        expect(screen.queryByRole('heading', { name: 'Test Movie', level: 2 })).not.toBeInTheDocument();
+        expect(global.fetch.mock.calls.map(([url]) => url)).toEqual([
+            'https://vidsrc.tw/info/movie/12.json', 'https://vidsrc.tw/info/movie/13.json'
+        ]);
+    } finally { random.mockRestore(); }
+});
+
+test.each(['missing', 'offline', 'invalid', 'wrong title', 'wrong episode'])('random picker fails closed when media is %s', async failure => {
+    const random = jest.spyOn(Math, 'random').mockReturnValueOnce(0.9).mockReturnValueOnce(0).mockReturnValueOnce(0);
+    axios.get.mockResolvedValue(response([tv]));
+    if (failure === 'offline') global.fetch.mockRejectedValue(new TypeError('Offline'));
+    else global.fetch.mockResolvedValue({ ok: failure !== 'missing', json: async () => failure === 'invalid' ? {}
+        : { status_code: 200, type: 'episode', tmdb_id: failure === 'wrong title' ? '999' : '34',
+            quality: '1080p', season: 1, episode: failure === 'wrong episode' ? 2 : 1 } });
+    try {
+        render(<RandomPick />);
+        await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Pick something random' })); });
+        expect(screen.getByRole('alert')).toHaveTextContent('No playable title found');
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Pick something random' })).toBeEnabled();
+    } finally { random.mockRestore(); }
+});
+
+test('leaving the picker cancels an in-flight availability check', async () => {
+    axios.get.mockResolvedValue(response([{ ...movie, name: 'Test Movie' }]));
+    global.fetch.mockImplementation(() => new Promise(() => {}));
+    const view = render(<RandomPick />);
+    fireEvent.click(screen.getByRole('button', { name: 'Pick something random' }));
+    await waitFor(() => expect(global.fetch).toHaveBeenCalledTimes(1));
+    const signal = global.fetch.mock.calls[0][1].signal;
+    view.unmount();
+    expect(signal.aborted).toBe(true);
+});
+});
 
 test('renders the movie site and opens titles without marking them watched', async () => {
     await act(async () => { render(<App />); });

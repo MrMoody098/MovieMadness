@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { NavLink, useNavigate, useSearchParams } from 'react-router-dom';
 import '../App.css';
 import Icon from './Icon';
+import RandomPick from './RandomPick';
 import { fetchTmdb, isCanceled } from '../utils/tmdb';
 
 const NavBar = ({ isModalOpen = false }) => {
@@ -62,7 +63,7 @@ const NavBar = ({ isModalOpen = false }) => {
                 ? (previous + 1) % suggestions.length : (previous <= 0 ? suggestions.length : previous) - 1);
         }
     };
-    return <nav className="navbar visible" aria-label="Main navigation" hidden={isModalOpen}>
+    return <><nav className="navbar visible" aria-label="Main navigation" hidden={isModalOpen}>
         <div className="navbar-content">
             <NavLink className="logo" to="/" aria-label="MovieMan home">Movie<span>Man</span></NavLink>
             <div className="nav-links">
@@ -99,6 +100,6 @@ const NavBar = ({ isModalOpen = false }) => {
             </form>
 
         </div>
-    </nav>;
+    </nav><RandomPick /></>;
 };
 export default NavBar;
