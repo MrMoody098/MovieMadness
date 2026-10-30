@@ -7,10 +7,13 @@ import Filter from './components/pages/Filter';
 import ExploreAll from './components/pages/ExploreAll';
 import Modal from 'react-modal';
 import { STORAGE_ERROR_EVENT } from './utils/mediaLibrary';
+import useArrowNavigation from './components/hooks/useArrowNavigation';
+import KeyboardHints from './components/KeyboardHints';
 
 if (document.getElementById('root')) Modal.setAppElement('#root');
 
 function App() {
+    useArrowNavigation();
     const [storageError, setStorageError] = useState('');
     useEffect(() => {
         const report = event => setStorageError(event.detail);
@@ -19,12 +22,12 @@ function App() {
     }, []);
     return <Router>
         <div className="App">
+            <KeyboardHints />
             <div className="page-background" aria-hidden="true">
                 <video autoPlay muted loop playsInline preload="metadata">
                     <source src="/12446814_1920_1080_30fps.mp4" type="video/mp4" />
                 </video>
             </div>
-            <a className="skip-link" href="#main-content">Skip to content</a>
             {storageError && <div className="storage-error" role="alert">{storageError} <button onClick={() => setStorageError('')}>Dismiss</button></div>}
             <main id="main-content" tabIndex={-1}>
                 <Routes>
